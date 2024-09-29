@@ -187,23 +187,22 @@
                 output += `<p>No damage inflicted. ${defender.name} successfully blocked all hits.</p>`;
             }
 
-            output += '<hr>';
-
-            // Append the output
-            document.getElementById('output').innerHTML += output;
-
             // Check for game end
             if (defender.units.length === 0) {
-                document.getElementById('output').innerHTML += `<h2><span class="${attacker === player1 ? 'attacker' : 'defender'}">${attacker.name} Wins!</span></h2>`;
+                output += `<h2><span class="${attacker === player1 ? 'attacker' : 'defender'}">${attacker.name} Wins!</span></h2>`;
                 document.getElementById('simulateButton').disabled = true;
                 document.getElementById('retaliateButton').classList.add('hidden');
                 gameEnded = true;
-                return;
             }
+
+            // Update the output (replacing previous content)
+            document.getElementById('output').innerHTML = output;
 
             // After first combat, show the Retaliate button
             document.getElementById('simulateButton').classList.add('hidden');
-            document.getElementById('retaliateButton').classList.remove('hidden');
+            if (!gameEnded) {
+                document.getElementById('retaliateButton').classList.remove('hidden');
+            }
         }
 
         // Function to handle retaliation
