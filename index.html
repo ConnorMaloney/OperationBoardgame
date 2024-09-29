@@ -10,6 +10,7 @@
         .attacker { color: red; }
         .defender { color: blue; }
         .hidden { display: none; }
+        .unit-emoji { font-size: 30px; vertical-align: middle; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -23,6 +24,13 @@
         const lightAttackDie = ['Hit', 'Hit', 'Hit', 'Miss', 'Miss', 'Miss'];
         const heavyAttackDie = ['Hit', 'Hit', 'Double Hit', 'Double Hit', 'Miss', 'Miss'];
         const defenceDie = ['Block', 'Block', 'Double Block', 'Miss', 'Miss', 'Miss'];
+
+        // Define emojis for units
+        const unitEmojis = {
+            'Infantry': '💂‍♂️', // Infantry emoji
+            'Artillery': '🏹',   // Artillery emoji
+            'Tank': '🚂'        // Tank emoji
+        };
 
         // Define players and their units
         const player1 = {
@@ -55,8 +63,8 @@
         function calculateHits(attackRolls) {
             let totalHits = 0;
             attackRolls.forEach(roll => {
-                if (roll === 'Hit') totalHits += 1;
-                if (roll === 'Double Hit') totalHits += 2;
+                if (roll.result === 'Hit') totalHits += 1;
+                if (roll.result === 'Double Hit') totalHits += 2;
             });
             return totalHits;
         }
@@ -65,8 +73,8 @@
         function calculateBlocks(defenceRolls) {
             let totalBlocks = 0;
             defenceRolls.forEach(roll => {
-                if (roll === 'Block') totalBlocks += 1;
-                if (roll === 'Double Block') totalBlocks += 2;
+                if (roll.result === 'Block') totalBlocks += 1;
+                if (roll.result === 'Double Block') totalBlocks += 2;
             });
             return totalBlocks;
         }
@@ -80,22 +88,44 @@
             // Highlight player roles
             output += `<h2><span class="attacker">${attacker.name} (Attacker)</span> vs <span class="defender">${defender.name} (Defender)</span></h2>`;
 
+            // Display attacker's units with emojis
+            output += `<h3>${attacker.name}'s Units:</h3>`;
+            let attackerUnitsEmojis = '';
+            attacker.units.forEach(unit => {
+                const emoji = unitEmojis[unit.type] || '';
+                attackerUnitsEmojis += emoji.repeat(unit.quantity);
+            });
+            output += `<p class="unit-emoji">${attackerUnitsEmojis}</p>`;
+
+            // Display defender's units with emojis
+            output += `<h3>${defender.name}'s Units:</h3>`;
+            let defenderUnitsEmojis = '';
+            defender.units.forEach(unit => {
+                const emoji = unitEmojis[unit.type] || '';
+                defenderUnitsEmojis += emoji.repeat(unit.quantity);
+            });
+            output += `<p class="unit-emoji">${defenderUnitsEmojis}</p>`;
+
             // Collect attack dice based on units
             const attackDice = [];
             for (let unit of attacker.units) {
                 if (unit.type === 'Infantry') {
                     for (let i = 0; i < unit.quantity; i++) {
-                        attackDice.push(lightAttackDie);
+                        attackDice.push({ die: lightAttackDie, unitType: 'Infantry' });
                     }
                 } else if (unit.type === 'Artillery') {
                     for (let i = 0; i < unit.quantity * 2; i++) { // Each Artillery rolls 2 heavy attack dice
-                        attackDice.push(heavyAttackDie);
+                        attackDice.push({ die: heavyAttackDie, unitType: 'Artillery' });
                     }
                 }
+                // Add other unit types if necessary
             }
 
             // Roll attack dice
-            const attackRolls = attackDice.map(die => rollDie(die));
+            const attackRolls = attackDice.map(dieObj => {
+                const result = rollDie(dieObj.die);
+                return { result: result, unitType: dieObj.unitType };
+            });
 
             // Calculate total hits
             const totalHits = calculateHits(attackRolls);
@@ -103,11 +133,12 @@
             // Output attack rolls
             output += '<h3>Attack Rolls:</h3>';
             attackRolls.forEach((roll, index) => {
-                let displayRoll = roll;
-                if (roll === 'Hit' || roll === 'Double Hit') {
-                    displayRoll = `<span class="hit">${roll}</span>`;
+                let displayRoll = roll.result;
+                if (roll.result === 'Hit' || roll.result === 'Double Hit') {
+                    displayRoll = `<span class="hit">${roll.result}</span>`;
                 }
-                output += `Die ${index + 1}: <strong>${displayRoll}</strong><br>`;
+                const emoji = unitEmojis[roll.unitType] || '';
+                output += `Die ${index + 1} (${emoji} ${roll.unitType}): <strong>${displayRoll}</strong><br>`;
             });
             output += `<strong>Total Hits: ${totalHits}</strong><br><br>`;
 
@@ -116,21 +147,21 @@
             for (let unit of defender.units) {
                 if (unit.type === 'Infantry') {
                     for (let i = 0; i < unit.quantity; i++) {
-                        defenceDice.push(defenceDie);
+                        defenceDice.push({ die: defenceDie, unitType: 'Infantry' });
                     }
                 } else if (unit.type === 'Tank') {
                     for (let i = 0; i < unit.quantity * 2; i++) { // Each Tank rolls 2 defence dice
-                        defenceDice.push(defenceDie);
-                    }
-                } else if (unit.type === 'Artillery') {
-                    for (let i = 0; i < unit.quantity; i++) {
-                        defenceDice.push(defenceDie);
+                        defenceDice.push({ die: defenceDie, unitType: 'Tank' });
                     }
                 }
+                // Add other unit types if necessary
             }
 
             // Roll defence dice
-            const defenceRolls = defenceDice.map(die => rollDie(die));
+            const defenceRolls = defenceDice.map(dieObj => {
+                const result = rollDie(dieObj.die);
+                return { result: result, unitType: dieObj.unitType };
+            });
 
             // Calculate total blocks
             const totalBlocks = calculateBlocks(defenceRolls);
@@ -138,11 +169,12 @@
             // Output defence rolls
             output += '<h3>Defence Rolls:</h3>';
             defenceRolls.forEach((roll, index) => {
-                let displayRoll = roll;
-                if (roll === 'Block' || roll === 'Double Block') {
-                    displayRoll = `<span class="block">${roll}</span>`;
+                let displayRoll = roll.result;
+                if (roll.result === 'Block' || roll.result === 'Double Block') {
+                    displayRoll = `<span class="block">${roll.result}</span>`;
                 }
-                output += `Die ${index + 1}: <strong>${displayRoll}</strong><br>`;
+                const emoji = unitEmojis[roll.unitType] || '';
+                output += `Die ${index + 1} (${emoji} ${roll.unitType}): <strong>${displayRoll}</strong><br>`;
             });
             output += `<strong>Total Blocks: ${totalBlocks}</strong><br><br>`;
 
@@ -177,9 +209,12 @@
                 // Output defender's remaining units
                 if (defender.units.length > 0) {
                     output += `<p>${defender.name}'s Remaining Units:</p>`;
+                    let defenderUnitsEmojis = '';
                     defender.units.forEach(unit => {
-                        output += `${unit.type}: <strong>${unit.quantity}</strong> (Health: ${unit.health})<br>`;
+                        const emoji = unitEmojis[unit.type] || '';
+                        defenderUnitsEmojis += emoji.repeat(unit.quantity);
                     });
+                    output += `<p class="unit-emoji">${defenderUnitsEmojis}</p>`;
                 } else {
                     output += `<p><strong>${defender.name} has no remaining units!</strong></p>`;
                 }
