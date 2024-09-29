@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WW1 Board Game Combat Simulator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        pre { background-color: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>WW1 Board Game Combat Simulator</h1>
+    <button onclick="simulateCombat()">Simulate Combat</button>
+    <div id="output"></div>
+
+    <script>
+        // Define the custom dice
+        const lightAttackDie = ['Hit', 'Hit', 'Hit', 'Miss', 'Miss', 'Miss'];
+        const heavyAttackDie = ['Hit', 'Hit', 'Double Hit', 'Double Hit', 'Miss', 'Miss'];
+        const defenceDie = ['Block', 'Block', 'Double Block', 'Miss', 'Miss', 'Miss'];
+
+        // Function to roll a die
+        function rollDie(die) {
+            const result = die[Math.floor(Math.random() * die.length)];
+            return result;
+        }
+
+        // Function to calculate hits from attack rolls
+        function calculateHits(attackRolls) {
+            let totalHits = 0;
+            attackRolls.forEach(roll => {
+                if (roll === 'Hit') totalHits += 1;
+                if (roll === 'Double Hit') totalHits += 2;
+            });
+            return totalHits;
+        }
+
+        // Function to calculate blocks from defence rolls
+        function calculateBlocks(defenceRolls) {
+            let totalBlocks = 0;
+            defenceRolls.forEach(roll => {
+                if (roll === 'Block') totalBlocks += 1;
+                if (roll === 'Double Block') totalBlocks += 2;
+            });
+            return totalBlocks;
+        }
+
+        // Function to simulate combat
+        function simulateCombat() {
+            let output = '';
+
+            // Player 1 (Attacker)
+            const player1Units = {
+                infantry: 1,
+                artillery: 1
+            };
+
+            const player1AttackDice = [];
+
+            // Infantry attack dice
+            for (let i = 0; i < player1Units.infantry; i++) {
+                player1AttackDice.push(lightAttackDie);
+            }
+
+            // Artillery attack dice
+            for (let i = 0; i < player1Units.artillery; i++) {
+                player1AttackDice.push(heavyAttackDie);
+                player1AttackDice.push(heavyAttackDie); // Artillery rolls 2 heavy attack dice
+            }
+
+            // Roll Player 1's attack dice
+            const player1AttackRolls = player1AttackDice.map(die => rollDie(die));
+
+            // Calculate total hits
+            const totalHits = calculateHits(player1AttackRolls);
+
+            // Output Player 1's rolls
+            output += '<h2>Player 1\'s Attack Rolls:</h2>';
+            player1AttackRolls.forEach((roll, index) => {
+                output += `Die ${index + 1}: <strong>${roll}</strong><br>`;
+            });
+            output += `<strong>Total Hits: ${totalHits}</strong><br><br>`;
+
+            // Player 2 (Defender)
+            const player2Units = {
+                infantry: 3,
+                tank: 1
+            };
+
+            const player2DefenceDice = [];
+
+            // Infantry defence dice
+            for (let i = 0; i < player2Units.infantry; i++) {
+                player2DefenceDice.push(defenceDie);
+            }
+
+            // Tank defence dice
+            for (let i = 0; i < player2Units.tank; i++) {
+                player2DefenceDice.push(defenceDie);
+                player2DefenceDice.push(defenceDie); // Tank rolls 2 defence dice
+            }
+
+            // Roll Player 2's defence dice
+            const player2DefenceRolls = player2DefenceDice.map(die => rollDie(die));
+
+            // Calculate total blocks
+            const totalBlocks = calculateBlocks(player2DefenceRolls);
+
+            // Output Player 2's rolls
+            output += '<h2>Player 2\'s Defence Rolls:</h2>';
+            player2DefenceRolls.forEach((roll, index) => {
+                output += `Die ${index + 1}: <strong>${roll}</strong><br>`;
+            });
+            output += `<strong>Total Blocks: ${totalBlocks}</strong><br><br>`;
+
+            // Combat Resolution
+            const remainingHits = Math.max(totalHits - totalBlocks, 0);
+
+            output += '<h2>Combat Resolution:</h2>';
+            output += `Remaining Hits after Blocks: <strong>${remainingHits}</strong><br>`;
+
+            if (remainingHits > 0) {
+                // Damage allocation logic
+                output += '<p>Damage inflicted on Player 2\'s units.</p>';
+                let hitsToAllocate = remainingHits;
+                const player2UnitsHealth = {
+                    infantry: player2Units.infantry * 1, // Each infantry has 1 health
+                    tank: player2Units.tank * 3          // Each tank has 3 health
+                };
+
+                // Apply hits to infantry first
+                while (hitsToAllocate > 0 && player2UnitsHealth.infantry > 0) {
+                    player2UnitsHealth.infantry -= 1;
+                    hitsToAllocate -= 1;
+                }
+
+                // Apply remaining hits to tank
+                while (hitsToAllocate > 0 && player2UnitsHealth.tank > 0) {
+                    player2UnitsHealth.tank -= 1;
+                    hitsToAllocate -= 1;
+                }
+
+                output += `<p>Player 2's Remaining Units Health:</p>`;
+                output += `Infantry Health: <strong>${Math.max(player2UnitsHealth.infantry, 0)}</strong><br>`;
+                output += `Tank Health: <strong>${Math.max(player2UnitsHealth.tank, 0)}</strong><br>`;
+            } else {
+                output += '<p>No damage inflicted. Player 2 successfully blocked all hits.</p>';
+            }
+
+            // Display the output
+            document.getElementById('output').innerHTML = output;
+        }
+    </script>
+</body>
+</html>
