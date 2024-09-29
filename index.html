@@ -4,13 +4,18 @@
     <title>WW1 Board Game Combat Simulator</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        button { padding: 10px 20px; font-size: 16px; }
-        pre { background-color: #f4f4f4; padding: 10px; }
+        button { padding: 10px 20px; font-size: 16px; margin-bottom: 10px; }
+        .hit { color: red; }
+        .block { color: blue; }
+        .attacker { color: red; }
+        .defender { color: blue; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <h1>WW1 Board Game Combat Simulator</h1>
-    <button onclick="simulateCombat()">Simulate Combat</button>
+    <button id="simulateButton" onclick="simulateCombat()">Simulate Combat</button>
+    <button id="retaliateButton" class="hidden" onclick="retaliateCombat()">Retaliate</button>
     <div id="output"></div>
 
     <script>
@@ -18,6 +23,27 @@
         const lightAttackDie = ['Hit', 'Hit', 'Hit', 'Miss', 'Miss', 'Miss'];
         const heavyAttackDie = ['Hit', 'Hit', 'Double Hit', 'Double Hit', 'Miss', 'Miss'];
         const defenceDie = ['Block', 'Block', 'Double Block', 'Miss', 'Miss', 'Miss'];
+
+        // Define players and their units
+        const player1 = {
+            name: 'Player 1',
+            units: [
+                { type: 'Infantry', quantity: 2, health: 1, maxHealth: 1 },
+                { type: 'Artillery', quantity: 1, health: 2, maxHealth: 2 }
+            ]
+        };
+
+        const player2 = {
+            name: 'Player 2',
+            units: [
+                { type: 'Infantry', quantity: 3, health: 1, maxHealth: 1 },
+                { type: 'Tank', quantity: 1, health: 3, maxHealth: 3 }
+            ]
+        };
+
+        let attacker = player1;
+        let defender = player2;
+        let gameEnded = false;
 
         // Function to roll a die
         function rollDie(die) {
@@ -45,110 +71,149 @@
             return totalBlocks;
         }
 
-        // Function to simulate combat
+        // Function to simulate a combat round
         function simulateCombat() {
+            if (gameEnded) return;
+
             let output = '';
 
-            // Player 1 (Attacker)
-            const player1Units = {
-                infantry: 1,
-                artillery: 1
-            };
+            // Highlight player roles
+            output += `<h2><span class="attacker">${attacker.name} (Attacker)</span> vs <span class="defender">${defender.name} (Defender)</span></h2>`;
 
-            const player1AttackDice = [];
-
-            // Infantry attack dice
-            for (let i = 0; i < player1Units.infantry; i++) {
-                player1AttackDice.push(lightAttackDie);
+            // Collect attack dice based on units
+            const attackDice = [];
+            for (let unit of attacker.units) {
+                if (unit.type === 'Infantry') {
+                    for (let i = 0; i < unit.quantity; i++) {
+                        attackDice.push(lightAttackDie);
+                    }
+                } else if (unit.type === 'Artillery') {
+                    for (let i = 0; i < unit.quantity * 2; i++) { // Each Artillery rolls 2 heavy attack dice
+                        attackDice.push(heavyAttackDie);
+                    }
+                }
             }
 
-            // Artillery attack dice
-            for (let i = 0; i < player1Units.artillery; i++) {
-                player1AttackDice.push(heavyAttackDie);
-                player1AttackDice.push(heavyAttackDie); // Artillery rolls 2 heavy attack dice
-            }
-
-            // Roll Player 1's attack dice
-            const player1AttackRolls = player1AttackDice.map(die => rollDie(die));
+            // Roll attack dice
+            const attackRolls = attackDice.map(die => rollDie(die));
 
             // Calculate total hits
-            const totalHits = calculateHits(player1AttackRolls);
+            const totalHits = calculateHits(attackRolls);
 
-            // Output Player 1's rolls
-            output += '<h2>Player 1\'s Attack Rolls:</h2>';
-            player1AttackRolls.forEach((roll, index) => {
-                output += `Die ${index + 1}: <strong>${roll}</strong><br>`;
+            // Output attack rolls
+            output += '<h3>Attack Rolls:</h3>';
+            attackRolls.forEach((roll, index) => {
+                let displayRoll = roll;
+                if (roll === 'Hit' || roll === 'Double Hit') {
+                    displayRoll = `<span class="hit">${roll}</span>`;
+                }
+                output += `Die ${index + 1}: <strong>${displayRoll}</strong><br>`;
             });
             output += `<strong>Total Hits: ${totalHits}</strong><br><br>`;
 
-            // Player 2 (Defender)
-            const player2Units = {
-                infantry: 3,
-                tank: 1
-            };
-
-            const player2DefenceDice = [];
-
-            // Infantry defence dice
-            for (let i = 0; i < player2Units.infantry; i++) {
-                player2DefenceDice.push(defenceDie);
+            // Collect defence dice based on units
+            const defenceDice = [];
+            for (let unit of defender.units) {
+                if (unit.type === 'Infantry') {
+                    for (let i = 0; i < unit.quantity; i++) {
+                        defenceDice.push(defenceDie);
+                    }
+                } else if (unit.type === 'Tank') {
+                    for (let i = 0; i < unit.quantity * 2; i++) { // Each Tank rolls 2 defence dice
+                        defenceDice.push(defenceDie);
+                    }
+                } else if (unit.type === 'Artillery') {
+                    for (let i = 0; i < unit.quantity; i++) {
+                        defenceDice.push(defenceDie);
+                    }
+                }
             }
 
-            // Tank defence dice
-            for (let i = 0; i < player2Units.tank; i++) {
-                player2DefenceDice.push(defenceDie);
-                player2DefenceDice.push(defenceDie); // Tank rolls 2 defence dice
-            }
-
-            // Roll Player 2's defence dice
-            const player2DefenceRolls = player2DefenceDice.map(die => rollDie(die));
+            // Roll defence dice
+            const defenceRolls = defenceDice.map(die => rollDie(die));
 
             // Calculate total blocks
-            const totalBlocks = calculateBlocks(player2DefenceRolls);
+            const totalBlocks = calculateBlocks(defenceRolls);
 
-            // Output Player 2's rolls
-            output += '<h2>Player 2\'s Defence Rolls:</h2>';
-            player2DefenceRolls.forEach((roll, index) => {
-                output += `Die ${index + 1}: <strong>${roll}</strong><br>`;
+            // Output defence rolls
+            output += '<h3>Defence Rolls:</h3>';
+            defenceRolls.forEach((roll, index) => {
+                let displayRoll = roll;
+                if (roll === 'Block' || roll === 'Double Block') {
+                    displayRoll = `<span class="block">${roll}</span>`;
+                }
+                output += `Die ${index + 1}: <strong>${displayRoll}</strong><br>`;
             });
             output += `<strong>Total Blocks: ${totalBlocks}</strong><br><br>`;
 
             // Combat Resolution
-            const remainingHits = Math.max(totalHits - totalBlocks, 0);
+            let remainingHits = Math.max(totalHits - totalBlocks, 0);
 
-            output += '<h2>Combat Resolution:</h2>';
+            output += '<h3>Combat Resolution:</h3>';
             output += `Remaining Hits after Blocks: <strong>${remainingHits}</strong><br>`;
 
             if (remainingHits > 0) {
-                // Damage allocation logic
-                output += '<p>Damage inflicted on Player 2\'s units.</p>';
-                let hitsToAllocate = remainingHits;
-                const player2UnitsHealth = {
-                    infantry: player2Units.infantry * 1, // Each infantry has 1 health
-                    tank: player2Units.tank * 3          // Each tank has 3 health
-                };
-
-                // Apply hits to infantry first
-                while (hitsToAllocate > 0 && player2UnitsHealth.infantry > 0) {
-                    player2UnitsHealth.infantry -= 1;
-                    hitsToAllocate -= 1;
+                output += `<p>Damage inflicted on ${defender.name}'s units.</p>`;
+                // Apply damage to defender's units
+                for (let unit of defender.units) {
+                    while (remainingHits > 0 && unit.quantity > 0) {
+                        unit.health -= 1;
+                        remainingHits -= 1;
+                        if (unit.health <= 0) {
+                            unit.quantity -= 1;
+                            if (unit.quantity > 0) {
+                                unit.health = unit.maxHealth;
+                            }
+                        }
+                    }
+                    if (remainingHits <= 0) {
+                        break;
+                    }
                 }
 
-                // Apply remaining hits to tank
-                while (hitsToAllocate > 0 && player2UnitsHealth.tank > 0) {
-                    player2UnitsHealth.tank -= 1;
-                    hitsToAllocate -= 1;
-                }
+                // Remove units with zero quantity
+                defender.units = defender.units.filter(unit => unit.quantity > 0);
 
-                output += `<p>Player 2's Remaining Units Health:</p>`;
-                output += `Infantry Health: <strong>${Math.max(player2UnitsHealth.infantry, 0)}</strong><br>`;
-                output += `Tank Health: <strong>${Math.max(player2UnitsHealth.tank, 0)}</strong><br>`;
+                // Output defender's remaining units
+                if (defender.units.length > 0) {
+                    output += `<p>${defender.name}'s Remaining Units:</p>`;
+                    defender.units.forEach(unit => {
+                        output += `${unit.type}: <strong>${unit.quantity}</strong> (Health: ${unit.health})<br>`;
+                    });
+                } else {
+                    output += `<p><strong>${defender.name} has no remaining units!</strong></p>`;
+                }
             } else {
-                output += '<p>No damage inflicted. Player 2 successfully blocked all hits.</p>';
+                output += `<p>No damage inflicted. ${defender.name} successfully blocked all hits.</p>`;
             }
 
-            // Display the output
-            document.getElementById('output').innerHTML = output;
+            output += '<hr>';
+
+            // Append the output
+            document.getElementById('output').innerHTML += output;
+
+            // Check for game end
+            if (defender.units.length === 0) {
+                document.getElementById('output').innerHTML += `<h2><span class="${attacker === player1 ? 'attacker' : 'defender'}">${attacker.name} Wins!</span></h2>`;
+                document.getElementById('simulateButton').disabled = true;
+                document.getElementById('retaliateButton').classList.add('hidden');
+                gameEnded = true;
+                return;
+            }
+
+            // After first combat, show the Retaliate button
+            document.getElementById('simulateButton').classList.add('hidden');
+            document.getElementById('retaliateButton').classList.remove('hidden');
+        }
+
+        // Function to handle retaliation
+        function retaliateCombat() {
+            if (gameEnded) return;
+
+            // Switch roles
+            [attacker, defender] = [defender, attacker];
+
+            simulateCombat();
         }
     </script>
 </body>
