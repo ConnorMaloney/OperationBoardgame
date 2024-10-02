@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WW1 Board Game Combat Simulator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; font-size: 16px; margin-bottom: 10px; }
+        .hit { color: red; }
+        .block { color: blue; }
+        .attacker { color: red; }
+        .defender { color: blue; }
+        .hidden { display: none; }
+        .unit-emoji { font-size: 30px; vertical-align: middle; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <h1>WW1 Board Game Combat Simulator</h1>
+    <button id="simulateButton" onclick="simulateCombat()">Simulate Combat</button>
+    <button id="retaliateButton" class="hidden" onclick="retaliateCombat()">Retaliate</button>
+    <div id="output"></div>
+
+    <script>
+        // Define the custom dice
+        const lightAttackDie = ['Hit', 'Hit', 'Hit', 'Miss', 'Miss', 'Miss'];
+        const heavyAttackDie = ['Hit', 'Hit', 'Double Hit', 'Double Hit', 'Miss', 'Miss'];
+        const defenceDie = ['Block', 'Block', 'Double Block', 'Miss', 'Miss', 'Miss'];
+
+        // Define emojis for units
+        const unitEmojis = {
+            'Infantry': '💂‍♂️', // Infantry emoji
+            'Artillery': '🏹',   // Artillery emoji
+            'Tank': '🚂'        // Tank emoji
+        };
+
+        // Define players and their units
+        const player1 = {
+            name: 'Player 1',
+            units: [
+                { type: 'Infantry', quantity: 2, health: 1, maxHealth: 1 },
+                { type: 'Artillery', quantity: 1, health: 2, maxHealth: 2 }
+            ]
+        };
+
+        const player2 = {
+            name: 'Player 2',
+            units: [
+                { type: 'Infantry', quantity: 3, health: 1, maxHealth: 1 },
+                { type: 'Tank', quantity: 1, health: 3, maxHealth: 3 }
+            ]
+        };
+
+        let attacker = player1;
+        let defender = player2;
+        let gameEnded = false;
+
+        // Function to roll a die
+        function rollDie(die) {
+            const result = die[Math.floor(Math.random() * die.length)];
+            return result;
+        }
+
+        // Function to calculate hits from attack rolls
+        function calculateHits(attackRolls) {
+            let totalHits = 0;
+            attackRolls.forEach(roll => {
+                if (roll.result === 'Hit') totalHits += 1;
+                if (roll.result === 'Double Hit') totalHits += 2;
+            });
+            return totalHits;
+        }
+
+        // Function to calculate blocks from defence rolls
+        function calculateBlocks(defenceRolls) {
+            let totalBlocks = 0;
+            defenceRolls.forEach(roll => {
+                if (roll.result === 'Block') totalBlocks += 1;
+                if (roll.result === 'Double Block') totalBlocks += 2;
+            });
+            return totalBlocks;
+        }
+
+        // Function to simulate a combat round
+        function simulateCombat() {
+            if (gameEnded) return;
+
+            let output = '';
+
+            // Highlight player roles
+            output += `<h2><span class="attacker">${attacker.name} (Attacker)</span> vs <span class="defender">${defender.name} (Defender)</span></h2>`;
+
+            // Display attacker's units with emojis
+            output += `<h3>${attacker.name}'s Units:</h3>`;
+            let attackerUnitsEmojis = '';
+            attacker.units.forEach(unit => {
+                const emoji = unitEmojis[unit.type] || '';
+                attackerUnitsEmojis += emoji.repeat(unit.quantity);
+            });
+            output += `<p class="unit-emoji">${attackerUnitsEmojis}</p>`;
+
+            // Display defender's units with emojis
+            output += `<h3>${defender.name}'s Units:</h3>`;
+            let defenderUnitsEmojis = '';
+            defender.units.forEach(unit => {
+                const emoji = unitEmojis[unit.type] || '';
+                defenderUnitsEmojis += emoji.repeat(unit.quantity);
+            });
+            output += `<p class="unit-emoji">${defenderUnitsEmojis}</p>`;
+
+            // Collect attack dice based on units
+            const attackDice = [];
+            for (let unit of attacker.units) {
+                if (unit.type === 'Infantry') {
+                    for (let i = 0; i < unit.quantity; i++) {
+                        attackDice.push({ die: lightAttackDie, unitType: 'Infantry' });
+                    }
+                } else if (unit.type === 'Artillery') {
+                    for (let i = 0; i < unit.quantity * 2; i++) { // Each Artillery rolls 2 heavy attack dice
+                        attackDice.push({ die: heavyAttackDie, unitType: 'Artillery' });
+                    }
+                }
+                // Add other unit types if necessary
+            }
+
+            // Roll attack dice
+            const attackRolls = attackDice.map(dieObj => {
+                const result = rollDie(dieObj.die);
+                return { result: result, unitType: dieObj.unitType };
+            });
+
+            // Calculate total hits
+            const totalHits = calculateHits(attackRolls);
+
+            // Output attack rolls
+            output += '<h3>Attack Rolls:</h3>';
+            attackRolls.forEach((roll, index) => {
+                let displayRoll = roll.result;
+                if (roll.result === 'Hit' || roll.result === 'Double Hit') {
+                    displayRoll = `<span class="hit">${roll.result}</span>`;
+                }
+                const emoji = unitEmojis[roll.unitType] || '';
+                output += `Die ${index + 1} (${emoji} ${roll.unitType}): <strong>${displayRoll}</strong><br>`;
+            });
+            output += `<strong>Total Hits: ${totalHits}</strong><br><br>`;
+
+            // Collect defence dice based on units
+            const defenceDice = [];
+            for (let unit of defender.units) {
+                if (unit.type === 'Infantry') {
+                    for (let i = 0; i < unit.quantity; i++) {
+                        defenceDice.push({ die: defenceDie, unitType: 'Infantry' });
+                    }
+                } else if (unit.type === 'Tank') {
+                    for (let i = 0; i < unit.quantity * 2; i++) { // Each Tank rolls 2 defence dice
+                        defenceDice.push({ die: defenceDie, unitType: 'Tank' });
+                    }
+                }
+                // Add other unit types if necessary
+            }
+
+            // Roll defence dice
+            const defenceRolls = defenceDice.map(dieObj => {
+                const result = rollDie(dieObj.die);
+                return { result: result, unitType: dieObj.unitType };
+            });
+
+            // Calculate total blocks
+            const totalBlocks = calculateBlocks(defenceRolls);
+
+            // Output defence rolls
+            output += '<h3>Defence Rolls:</h3>';
+            defenceRolls.forEach((roll, index) => {
+                let displayRoll = roll.result;
+                if (roll.result === 'Block' || roll.result === 'Double Block') {
+                    displayRoll = `<span class="block">${roll.result}</span>`;
+                }
+                const emoji = unitEmojis[roll.unitType] || '';
+                output += `Die ${index + 1} (${emoji} ${roll.unitType}): <strong>${displayRoll}</strong><br>`;
+            });
+            output += `<strong>Total Blocks: ${totalBlocks}</strong><br><br>`;
+
+            // Combat Resolution
+            let remainingHits = Math.max(totalHits - totalBlocks, 0);
+
+            output += '<h3>Combat Resolution:</h3>';
+            output += `Remaining Hits after Blocks: <strong>${remainingHits}</strong><br>`;
+
+            if (remainingHits > 0) {
+                output += `<p>Damage inflicted on ${defender.name}'s units.</p>`;
+                // Apply damage to defender's units
+                for (let unit of defender.units) {
+                    while (remainingHits > 0 && unit.quantity > 0) {
+                        unit.health -= 1;
+                        remainingHits -= 1;
+                        if (unit.health <= 0) {
+                            unit.quantity -= 1;
+                            if (unit.quantity > 0) {
+                                unit.health = unit.maxHealth;
+                            }
+                        }
+                    }
+                    if (remainingHits <= 0) {
+                        break;
+                    }
+                }
+
+                // Remove units with zero quantity
+                defender.units = defender.units.filter(unit => unit.quantity > 0);
+
+                // Output defender's remaining units
+                if (defender.units.length > 0) {
+                    output += `<p>${defender.name}'s Remaining Units:</p>`;
+                    let defenderUnitsEmojis = '';
+                    defender.units.forEach(unit => {
+                        const emoji = unitEmojis[unit.type] || '';
+                        defenderUnitsEmojis += emoji.repeat(unit.quantity);
+                    });
+                    output += `<p class="unit-emoji">${defenderUnitsEmojis}</p>`;
+                } else {
+                    output += `<p><strong>${defender.name} has no remaining units!</strong></p>`;
+                }
+            } else {
+                output += `<p>No damage inflicted. ${defender.name} successfully blocked all hits.</p>`;
+            }
+
+            // Check for game end
+            if (defender.units.length === 0) {
+                output += `<h2><span class="${attacker === player1 ? 'attacker' : 'defender'}">${attacker.name} Wins!</span></h2>`;
+                document.getElementById('simulateButton').disabled = true;
+                document.getElementById('retaliateButton').classList.add('hidden');
+                gameEnded = true;
+            }
+
+            // Update the output (replacing previous content)
+            document.getElementById('output').innerHTML = output;
+
+            // After first combat, show the Retaliate button
+            document.getElementById('simulateButton').classList.add('hidden');
+            if (!gameEnded) {
+                document.getElementById('retaliateButton').classList.remove('hidden');
+            }
+        }
+
+        // Function to handle retaliation
+        function retaliateCombat() {
+            if (gameEnded) return;
+
+            // Switch roles
+            [attacker, defender] = [defender, attacker];
+
+            simulateCombat();
+        }
+    </script>
+</body>
+</html>
