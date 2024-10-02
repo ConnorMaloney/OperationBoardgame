@@ -291,16 +291,16 @@
 
             // Output Cascadea's rolls
             output += `<h3>Cascadea's Rolls:</h3>`;
-            output += `Attack Rolls: ${cascadeaRolls.attackRolls.map(roll => roll.emoji).join(' ')}<br>`;
-            output += `Defence Rolls: ${cascadeaRolls.defenceRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Attack Rolls: ${cascadeaRolls.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
+            output += `Defence Rolls: ${cascadeaRolls.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
             output += `Total Hits: ${cascadeaRolls.totalHits} ${HIT_EMOJI}<br>`;
             output += `Total Blocks: ${cascadeaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
             output += `Total Morales: ${cascadeaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
 
             // Output Kharkhovia's rolls
             output += `<h3>Kharkhovia's Rolls:</h3>`;
-            output += `Attack Rolls: ${kharkhoviaRolls.attackRolls.map(roll => roll.emoji).join(' ')}<br>`;
-            output += `Defence Rolls: ${kharkhoviaRolls.defenceRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Attack Rolls: ${kharkhoviaRolls.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
+            output += `Defence Rolls: ${kharkhoviaRolls.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
             output += `Total Hits: ${kharkhoviaRolls.totalHits} ${HIT_EMOJI}<br>`;
             output += `Total Blocks: ${kharkhoviaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
             output += `Total Morales: ${kharkhoviaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
@@ -328,8 +328,8 @@
 
             // Combat Resolution
             output += `<h3>Combat Resolution:</h3>`;
-            resolveDamage('cascadea', cascadeaDamage, output);
-            resolveDamage('kharkhovia', kharkhoviaDamage, output);
+            output += resolveDamage('cascadea', cascadeaDamage);
+            output += resolveDamage('kharkhovia', kharkhoviaDamage);
 
             // Determine Winner
             const cascadeaTotalUnits = totalUnits(units.cascadea);
@@ -354,7 +354,8 @@
         }
 
         // Function to resolve damage for a faction
-        function resolveDamage(faction, damage, output) {
+        function resolveDamage(faction, damage) {
+            let output = '';
             let unitTypes = ['infantry', 'cavalry'];
             for (let unitType of unitTypes) {
                 let unitCount = units[faction][unitType];
@@ -374,6 +375,7 @@
             } else {
                 output += `<p>${capitalizeFirstLetter(faction)} loses units.</p>`;
             }
+            return output;
         }
 
         // Function to calculate total units
