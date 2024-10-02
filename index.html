@@ -26,14 +26,15 @@
         .morale { color: yellow; }
         .cascadea { color: rgb(53, 106, 29); } /* Green for Cascadea */
         .kharkhovia { color: rgb(241, 194, 50); } /* Yellow for Kharkhovia */
-        .unit-controls { display: flex; align-items: center; margin-bottom: 10px; }
-        .unit-controls span { margin: 0 10px; }
+        .unit-controls { margin-bottom: 10px; }
+        .unit-group { display: flex; align-items: center; margin-bottom: 5px; }
+        .unit-group span { margin: 0 10px; }
         #combat-section { flex: 1; }
         #board {
             flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             gap: 20px;
         }
         /* Hexagon container */
@@ -73,6 +74,14 @@
             word-wrap: break-word;
             line-height: 1.2;
         }
+        /* Damage display styles */
+        .damage-display {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .damage-display span {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -81,16 +90,34 @@
 
         <!-- Unit Controls -->
         <div class="unit-controls">
-            <span>Cascadea's Units:</span>
-            <button onclick="changeUnits('cascadea', 1)">+1 💂‍♂️</button>
-            <span id="cascadea-units">1</span>
-            <button onclick="changeUnits('cascadea', -1)">-1 💂‍♂️</button>
+            <h2>Cascadea's Units:</h2>
+            <div class="unit-group">
+                <span>Infantry:</span>
+                <button onclick="changeUnits('cascadea', 'infantry', 1)">+1 💂‍♂️</button>
+                <span id="cascadea-infantry">1</span>
+                <button onclick="changeUnits('cascadea', 'infantry', -1)">-1 💂‍♂️</button>
+            </div>
+            <div class="unit-group">
+                <span>Cavalry:</span>
+                <button onclick="changeUnits('cascadea', 'cavalry', 1)">+1 🏇</button>
+                <span id="cascadea-cavalry">0</span>
+                <button onclick="changeUnits('cascadea', 'cavalry', -1)">-1 🏇</button>
+            </div>
         </div>
         <div class="unit-controls">
-            <span>Kharkhovia's Units:</span>
-            <button onclick="changeUnits('kharkhovia', 1)">+1 💂‍♂️</button>
-            <span id="kharkhovia-units">1</span>
-            <button onclick="changeUnits('kharkhovia', -1)">-1 💂‍♂️</button>
+            <h2>Kharkhovia's Units:</h2>
+            <div class="unit-group">
+                <span>Infantry:</span>
+                <button onclick="changeUnits('kharkhovia', 'infantry', 1)">+1 💂‍♂️</button>
+                <span id="kharkhovia-infantry">1</span>
+                <button onclick="changeUnits('kharkhovia', 'infantry', -1)">-1 💂‍♂️</button>
+            </div>
+            <div class="unit-group">
+                <span>Cavalry:</span>
+                <button onclick="changeUnits('kharkhovia', 'cavalry', 1)">+1 🏇</button>
+                <span id="kharkhovia-cavalry">0</span>
+                <button onclick="changeUnits('kharkhovia', 'cavalry', -1)">-1 🏇</button>
+            </div>
         </div>
 
         <button id="simulateButton" onclick="simulateCombat()">Simulate Combat</button>
@@ -99,45 +126,96 @@
 
     <!-- Board Section -->
     <div id="board">
+        <!-- Cascadea Section -->
         <div class="hex-container">
+            <!-- Damage Display -->
+            <div class="damage-display">
+                <span>Cascadea</span>
+                <span>Damage Dealt: <span id="cascadea-damage-dealt">0</span></span>
+                <span>Damage Received: <span id="cascadea-damage-received">0</span></span>
+            </div>
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="cascadea"></polygon>
             </svg>
-            <div class="hex-units" id="cascadea-hex-units">💂‍♂️</div>
+            <div class="hex-units" id="cascadea-hex-units"></div>
         </div>
+        <!-- Kharkhovia Section -->
         <div class="hex-container">
+            <!-- Damage Display -->
+            <div class="damage-display">
+                <span>Kharkhovia</span>
+                <span>Damage Dealt: <span id="kharkhovia-damage-dealt">0</span></span>
+                <span>Damage Received: <span id="kharkhovia-damage-received">0</span></span>
+            </div>
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="kharkhovia"></polygon>
             </svg>
-            <div class="hex-units" id="kharkhovia-hex-units">💂‍♂️</div>
+            <div class="hex-units" id="kharkhovia-hex-units"></div>
         </div>
     </div>
 
     <script>
-        // Dice values with Morale
-        const lightAttackDie = ['Hit', 'Hit', 'Double Hit', 'Morale', 'Morale', 'Miss'];
-        const defenceDie = ['Block', 'Block', 'Block', 'Double Block', 'Morale', 'Miss'];
+        // Emojis
+        const HIT_EMOJI = '💥';
+        const BLOCK_EMOJI = '🛡️';
+        const MORALE_EMOJI = '🥁';
+        const MISS_EMOJI = '⚪';
         const infantryEmoji = '💂‍♂️';
+        const cavalryEmoji = '🏇';
+
+        // Dice values with emojis and counts
+        const lightAttackDie = [
+            { hits: 1, morales: 0, emoji: HIT_EMOJI },
+            { hits: 1, morales: 0, emoji: HIT_EMOJI },
+            { hits: 2, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI },
+            { hits: 0, morales: 1, emoji: MORALE_EMOJI },
+            { hits: 0, morales: 1, emoji: MORALE_EMOJI },
+            { hits: 0, morales: 0, emoji: MISS_EMOJI }
+        ];
+
+        const defenceDie = [
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 2, morales: 0, emoji: BLOCK_EMOJI + BLOCK_EMOJI },
+            { blocks: 0, morales: 1, emoji: MORALE_EMOJI },
+            { blocks: 0, morales: 0, emoji: MISS_EMOJI }
+        ];
 
         // Unit counts
         const units = {
-            cascadea: 1,
-            kharkhovia: 1
+            cascadea: {
+                infantry: 1,
+                cavalry: 0
+            },
+            kharkhovia: {
+                infantry: 1,
+                cavalry: 0
+            }
         };
 
         // Function to change units
-        function changeUnits(faction, delta) {
-            units[faction] = Math.max(units[faction] + delta, 1);
-            document.getElementById(`${faction}-units`).innerText = units[faction];
+        function changeUnits(faction, unitType, delta) {
+            units[faction][unitType] = Math.max(units[faction][unitType] + delta, 0);
+            document.getElementById(`${faction}-${unitType}`).innerText = units[faction][unitType];
             updateBoardUnits();
         }
 
         // Update units on the board
         function updateBoardUnits() {
             ['cascadea', 'kharkhovia'].forEach(faction => {
-                document.getElementById(`${faction}-hex-units`).textContent = infantryEmoji.repeat(units[faction]);
+                let unitIcons = '';
+                unitIcons += infantryEmoji.repeat(units[faction].infantry);
+                unitIcons += cavalryEmoji.repeat(units[faction].cavalry);
+                document.getElementById(`${faction}-hex-units`).textContent = unitIcons;
             });
         }
+
+        // Initialize damage stats
+        const damageStats = {
+            cascadea: { dealt: 0, received: 0 },
+            kharkhovia: { dealt: 0, received: 0 }
+        };
 
         // Function to roll a die
         function rollDie(die) {
@@ -145,16 +223,52 @@
         }
 
         // Function to roll attack and defence for a faction
-        function rollForFaction(faction) {
-            const attackRoll = rollDie(lightAttackDie);
-            const defenceRolls = [rollDie(defenceDie), rollDie(defenceDie)];
+        function rollForFaction(faction, unitCounts) {
+            let attackRolls = [];
+            let defenceRolls = [];
+            let totalHits = 0;
             let totalBlocks = 0;
-            defenceRolls.forEach(roll => {
-                if (roll === 'Block') totalBlocks++;
-                else if (roll === 'Double Block') totalBlocks += 2;
-            });
-            const hits = attackRoll === 'Hit' ? 1 : attackRoll === 'Double Hit' ? 2 : 0;
-            return { attackRoll, defenceRolls, totalBlocks, hits };
+            let totalMorales = 0;
+
+            // Infantry rolls
+            for (let i = 0; i < unitCounts.infantry; i++) {
+                // Infantry rolls 1 attack die
+                const attackRoll = rollDie(lightAttackDie);
+                attackRolls.push(attackRoll);
+                totalHits += attackRoll.hits;
+                totalMorales += attackRoll.morales;
+
+                // Infantry rolls 1 defence die
+                const defenceRoll = rollDie(defenceDie);
+                defenceRolls.push(defenceRoll);
+                totalBlocks += defenceRoll.blocks || 0;
+                totalMorales += defenceRoll.morales || 0;
+            }
+
+            // Cavalry rolls
+            for (let i = 0; i < unitCounts.cavalry; i++) {
+                // Cavalry rolls 2 attack dice
+                for (let j = 0; j < 2; j++) {
+                    const attackRoll = rollDie(lightAttackDie);
+                    attackRolls.push(attackRoll);
+                    totalHits += attackRoll.hits;
+                    totalMorales += attackRoll.morales;
+                }
+
+                // Cavalry rolls 1 defence die
+                const defenceRoll = rollDie(defenceDie);
+                defenceRolls.push(defenceRoll);
+                totalBlocks += defenceRoll.blocks || 0;
+                totalMorales += defenceRoll.morales || 0;
+            }
+
+            return {
+                attackRolls,
+                defenceRolls,
+                totalHits,
+                totalBlocks,
+                totalMorales
+            };
         }
 
         // Function to simulate combat
@@ -163,54 +277,125 @@
 
             // Header
             output += `<h2><span class="cascadea">Cascadea (Attacker)</span> vs <span class="kharkhovia">Kharkhovia (Defender)</span></h2>`;
-            output += `<p>Cascadea: ${infantryEmoji.repeat(units.cascadea)} (${units.cascadea} units) vs Kharkhovia: ${infantryEmoji.repeat(units.kharkhovia)} (${units.kharkhovia} units)</p>`;
+
+            // Display units
+            const cascadeaUnitsDisplay = infantryEmoji.repeat(units.cascadea.infantry) + cavalryEmoji.repeat(units.cascadea.cavalry);
+            const kharkhoviaUnitsDisplay = infantryEmoji.repeat(units.kharkhovia.infantry) + cavalryEmoji.repeat(units.kharkhovia.cavalry);
+
+            output += `<p>Cascadea: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry)</p>`;
+            output += `<p>Kharkhovia: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry)</p>`;
 
             // Roll for both factions
-            const cascadeaRolls = rollForFaction('cascadea');
-            const kharkhoviaRolls = rollForFaction('kharkhovia');
+            const cascadeaRolls = rollForFaction('cascadea', units.cascadea);
+            const kharkhoviaRolls = rollForFaction('kharkhovia', units.kharkhovia);
 
             // Output Cascadea's rolls
             output += `<h3>Cascadea's Rolls:</h3>`;
-            output += `Attack Roll: <span class="${cascadeaRolls.attackRoll.includes('Hit') ? 'hit' : ''}">${cascadeaRolls.attackRoll}</span><br>`;
-            output += `Defence Rolls: ${cascadeaRolls.defenceRolls.map(roll => `<span class="${roll.includes('Block') ? 'block' : ''}">${roll}</span>`).join(', ')}<br>`;
-            output += `Blocks: ${cascadeaRolls.totalBlocks}<br>`;
+            output += `Attack Rolls: ${cascadeaRolls.attackRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Defence Rolls: ${cascadeaRolls.defenceRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Total Hits: ${cascadeaRolls.totalHits} ${HIT_EMOJI}<br>`;
+            output += `Total Blocks: ${cascadeaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
+            output += `Total Morales: ${cascadeaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
 
             // Output Kharkhovia's rolls
             output += `<h3>Kharkhovia's Rolls:</h3>`;
-            output += `Attack Roll: <span class="${kharkhoviaRolls.attackRoll.includes('Hit') ? 'hit' : ''}">${kharkhoviaRolls.attackRoll}</span><br>`;
-            output += `Defence Rolls: ${kharkhoviaRolls.defenceRolls.map(roll => `<span class="${roll.includes('Block') ? 'block' : ''}">${roll}</span>`).join(', ')}<br>`;
-            output += `Blocks: ${kharkhoviaRolls.totalBlocks}<br>`;
+            output += `Attack Rolls: ${kharkhoviaRolls.attackRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Defence Rolls: ${kharkhoviaRolls.defenceRolls.map(roll => roll.emoji).join(' ')}<br>`;
+            output += `Total Hits: ${kharkhoviaRolls.totalHits} ${HIT_EMOJI}<br>`;
+            output += `Total Blocks: ${kharkhoviaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
+            output += `Total Morales: ${kharkhoviaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
 
             // Calculate damage
-            const cascadeaDamage = Math.max(kharkhoviaRolls.hits - cascadeaRolls.totalBlocks, 0);
-            const kharkhoviaDamage = Math.max(cascadeaRolls.hits - kharkhoviaRolls.totalBlocks, 0);
+            const cascadeaDamage = Math.min(Math.max(kharkhoviaRolls.totalHits - cascadeaRolls.totalBlocks, 0), totalUnits(units.cascadea));
+            const kharkhoviaDamage = Math.min(Math.max(cascadeaRolls.totalHits - kharkhoviaRolls.totalBlocks, 0), totalUnits(units.kharkhovia));
+
+            // Update damage stats
+            damageStats.cascadea.dealt += kharkhoviaDamage;
+            damageStats.cascadea.received += cascadeaDamage;
+            damageStats.kharkhovia.dealt += cascadeaDamage;
+            damageStats.kharkhovia.received += kharkhoviaDamage;
+
+            // Update damage displays
+            document.getElementById('cascadea-damage-dealt').innerText = damageStats.cascadea.dealt;
+            document.getElementById('cascadea-damage-received').innerText = damageStats.cascadea.received;
+            document.getElementById('kharkhovia-damage-dealt').innerText = damageStats.kharkhovia.dealt;
+            document.getElementById('kharkhovia-damage-received').innerText = damageStats.kharkhovia.received;
+
+            // Output Damage Dealt
+            output += `<h3>Damage Dealt:</h3>`;
+            output += `Cascadea deals ${kharkhoviaDamage} damage to Kharkhovia.<br>`;
+            output += `Kharkhovia deals ${cascadeaDamage} damage to Cascadea.<br>`;
 
             // Combat Resolution
             output += `<h3>Combat Resolution:</h3>`;
-            if (cascadeaDamage >= units.cascadea) {
-                output += `<p class="kharkhovia">Cascadea's infantry is eliminated!</p>`;
-                units.cascadea = 0;
-            } else {
-                output += `<p>Cascadea takes ${cascadeaDamage} damage but survives.</p>`;
-                units.cascadea -= cascadeaDamage;
-            }
+            resolveDamage('cascadea', cascadeaDamage, output);
+            resolveDamage('kharkhovia', kharkhoviaDamage, output);
 
-            if (kharkhoviaDamage >= units.kharkhovia) {
-                output += `<p class="cascadea">Kharkhovia's infantry is eliminated!</p>`;
-                units.kharkhovia = 0;
+            // Determine Winner
+            const cascadeaTotalUnits = totalUnits(units.cascadea);
+            const kharkhoviaTotalUnits = totalUnits(units.kharkhovia);
+
+            if (cascadeaTotalUnits > 0 && kharkhoviaTotalUnits === 0) {
+                output += `<h2 class="cascadea">Cascadea Wins!</h2>`;
+            } else if (kharkhoviaTotalUnits > 0 && cascadeaTotalUnits === 0) {
+                output += `<h2 class="kharkhovia">Kharkhovia Wins!</h2>`;
+            } else if (cascadeaTotalUnits === 0 && kharkhoviaTotalUnits === 0) {
+                output += `<h2>It's a Tie!</h2>`;
             } else {
-                output += `<p>Kharkhovia takes ${kharkhoviaDamage} damage but survives.</p>`;
-                units.kharkhovia -= kharkhoviaDamage;
+                output += `<p>Both armies survive the battle.</p>`;
             }
 
             // Update unit counts and board
-            document.getElementById('cascadea-units').innerText = units.cascadea;
-            document.getElementById('kharkhovia-units').innerText = units.kharkhovia;
+            updateUnitDisplays();
             updateBoardUnits();
 
             // Update output
             document.getElementById('output').innerHTML = output;
         }
+
+        // Function to resolve damage for a faction
+        function resolveDamage(faction, damage, output) {
+            let unitTypes = ['infantry', 'cavalry'];
+            for (let unitType of unitTypes) {
+                let unitCount = units[faction][unitType];
+                if (damage >= unitCount) {
+                    damage -= unitCount;
+                    units[faction][unitType] = 0;
+                } else {
+                    units[faction][unitType] -= damage;
+                    damage = 0;
+                }
+                if (damage === 0) break;
+            }
+
+            // Output damage resolution
+            if (totalUnits(units[faction]) === 0) {
+                output += `<p class="${faction}">${capitalizeFirstLetter(faction)}'s units are eliminated!</p>`;
+            } else {
+                output += `<p>${capitalizeFirstLetter(faction)} loses units.</p>`;
+            }
+        }
+
+        // Function to calculate total units
+        function totalUnits(factionUnits) {
+            return factionUnits.infantry + factionUnits.cavalry;
+        }
+
+        // Function to update unit displays
+        function updateUnitDisplays() {
+            ['cascadea', 'kharkhovia'].forEach(faction => {
+                document.getElementById(`${faction}-infantry`).innerText = units[faction].infantry;
+                document.getElementById(`${faction}-cavalry`).innerText = units[faction].cavalry;
+            });
+        }
+
+        // Helper function to capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // Initialize board units
+        updateBoardUnits();
     </script>
 </body>
 </html>
