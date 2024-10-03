@@ -37,6 +37,15 @@ const unitsData = [
         heavyAttack: 2,
         defence: 3,
         strength: 3
+    },
+    {
+        name: "general",
+        displayName: "General",
+        emoji: "👨‍✈️", // New General Emoji
+        lightAttack: 1,
+        heavyAttack: 1,
+        defence: 3,
+        strength: 5
     }
     // You can add more units here in the future
 ];
