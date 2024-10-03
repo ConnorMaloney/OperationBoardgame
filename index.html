@@ -109,6 +109,7 @@
             white-space: normal;
             word-wrap: break-word;
             line-height: 1.2;
+            /* Removed unit summary display */
         }
 
         /* Damage arrow display styles */
@@ -246,7 +247,7 @@
 
         // Function to convert number to emojis
         function numberToEmojis(number) {
-            return String(number).split('').map(digit => numberEmojis[digit]).join('');
+            return String(number).split('').map(digit => numberEmojis[digit] || digit).join('');
         }
 
         // Dice values with emojis and counts
@@ -276,6 +277,13 @@
             { blocks: 0, morales: 1, emoji: MORALE_EMOJI },
             { blocks: 0, morales: 0, emoji: MISS_EMOJI }
         ];
+
+        // Unit Strengths
+        const unitStrength = {
+            infantry: 1,
+            cavalry: 1,
+            armoredCar: 2
+        };
 
         // Unit counts
         const units = {
@@ -382,12 +390,15 @@
             // Header
             output += `<h2><span class="cascadea">Cascadea (Attacker)</span> vs <span class="kharkhovia">Kharkhovia (Defender)</span></h2>`;
 
-            // Display units
+            // Display units with Total Strength
+            const cascadeaTotalStrength = calculateTotalStrength('cascadea');
+            const kharkhoviaTotalStrength = calculateTotalStrength('kharkhovia');
+
             const cascadeaUnitsDisplay = infantryEmoji.repeat(units.cascadea.infantry) + cavalryEmoji.repeat(units.cascadea.cavalry) + armoredCarEmoji.repeat(units.cascadea.armoredCar);
             const kharkhoviaUnitsDisplay = infantryEmoji.repeat(units.kharkhovia.infantry) + cavalryEmoji.repeat(units.kharkhovia.cavalry) + armoredCarEmoji.repeat(units.kharkhovia.armoredCar);
 
-            output += `<p><span class="cascadea">Cascadea</span>: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry, ${units.cascadea.armoredCar} Armored Car)</p>`;
-            output += `<p><span class="kharkhovia">Kharkhovia</span>: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry, ${units.kharkhovia.armoredCar} Armored Car)</p>`;
+            output += `<p><span class="cascadea">Cascadea</span>: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry, ${units.cascadea.armoredCar} Armored Car, ${cascadeaTotalStrength} Strength)</p>`;
+            output += `<p><span class="kharkhovia">Kharkhovia</span>: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry, ${units.kharkhovia.armoredCar} Armored Car, ${kharkhoviaTotalStrength} Strength)</p>`;
 
             // Roll for both factions
             const cascadeaRolls = rollForFaction('cascadea', units.cascadea);
@@ -409,7 +420,7 @@
             output += `Total Blocks: ${kharkhoviaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
             output += `Total Morales: ${kharkhoviaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
 
-            // Calculate damage (without capping to total units)
+            // Calculate damage
             const cascadeaDamage = Math.max(kharkhoviaRolls.totalHits - cascadeaRolls.totalBlocks, 0);
             const kharkhoviaDamage = Math.max(cascadeaRolls.totalHits - kharkhoviaRolls.totalBlocks, 0);
 
@@ -489,18 +500,18 @@
             let unitsLost = { infantry: 0, cavalry: 0, armoredCar: 0 };
             let unitTypes = ['infantry', 'cavalry', 'armoredCar'];
 
+            // Sort unitTypes by strength ascending
+            unitTypes.sort((a, b) => unitStrength[a] - unitStrength[b]);
+
             for (let unitType of unitTypes) {
+                let unitStrengthVal = unitStrength[unitType];
                 let unitCount = units[faction][unitType];
-                if (damage >= unitCount) {
-                    damage -= unitCount;
-                    unitsLost[unitType] += unitCount;
-                    units[faction][unitType] = 0;
-                } else {
-                    units[faction][unitType] -= damage;
-                    unitsLost[unitType] += damage;
-                    damage = 0;
+                while (unitCount > 0 && damage >= unitStrengthVal) {
+                    damage -= unitStrengthVal;
+                    unitsLost[unitType]++;
+                    units[faction][unitType]--;
+                    unitCount--;
                 }
-                if (damage === 0) break;
             }
 
             // Output damage resolution
@@ -511,13 +522,13 @@
                     // Build a string that lists units lost
                     let losses = [];
                     if (unitsLost.infantry > 0) {
-                        losses.push(`${unitsLost.infantry} infantry`);
+                        losses.push(`${unitsLost.infantry} Infantry`);
                     }
                     if (unitsLost.cavalry > 0) {
-                        losses.push(`${unitsLost.cavalry} cavalry`);
+                        losses.push(`${unitsLost.cavalry} Cavalry`);
                     }
                     if (unitsLost.armoredCar > 0) {
-                        losses.push(`${unitsLost.armoredCar} armored car`);
+                        losses.push(`${unitsLost.armoredCar} Armored Car`);
                     }
                     output += `<p>${capitalizeFirstLetter(faction)} loses ${losses.join(', ')}.</p>`;
                 }
@@ -531,6 +542,15 @@
         // Function to calculate total units
         function totalUnits(factionUnits) {
             return factionUnits.infantry + factionUnits.cavalry + factionUnits.armoredCar;
+        }
+
+        // Function to calculate total strength
+        function calculateTotalStrength(faction) {
+            let total = 0;
+            for (let unitType in units[faction]) {
+                total += units[faction][unitType] * unitStrength[unitType];
+            }
+            return total;
         }
 
         // Function to update unit displays
