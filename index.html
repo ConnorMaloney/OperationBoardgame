@@ -397,8 +397,8 @@
             const cascadeaUnitsDisplay = infantryEmoji.repeat(units.cascadea.infantry) + cavalryEmoji.repeat(units.cascadea.cavalry) + armoredCarEmoji.repeat(units.cascadea.armoredCar);
             const kharkhoviaUnitsDisplay = infantryEmoji.repeat(units.kharkhovia.infantry) + cavalryEmoji.repeat(units.kharkhovia.cavalry) + armoredCarEmoji.repeat(units.kharkhovia.armoredCar);
 
-            output += `<p><span class="cascadea">Cascadea</span>: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry, ${units.cascadea.armoredCar} Armored Car, ${cascadeaTotalStrength} Strength)</p>`;
-            output += `<p><span class="kharkhovia">Kharkhovia</span>: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry, ${units.kharkhovia.armoredCar} Armored Car, ${kharkhoviaTotalStrength} Strength)</p>`;
+            output += `<p><span class="cascadea">Cascadea</span>: ${cascadeaUnitsDisplay} (${cascadeaTotalStrength} Strength)</p>`;
+            output += `<p><span class="kharkhovia">Kharkhovia</span>: ${kharkhoviaUnitsDisplay} (${kharkhoviaTotalStrength} Strength)</p>`;
 
             // Roll for both factions
             const cascadeaRolls = rollForFaction('cascadea', units.cascadea);
