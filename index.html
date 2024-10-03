@@ -128,12 +128,7 @@
     <div id="board">
         <!-- Cascadea Section -->
         <div class="hex-container">
-            <!-- Damage Display -->
-            <div class="damage-display">
-                <span>Cascadea</span>
-                <span>Damage Dealt: <span id="cascadea-damage-dealt">0</span></span>
-                <span>Damage Received: <span id="cascadea-damage-received">0</span></span>
-            </div>
+            <!-- Removed Damage Display -->
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="cascadea"></polygon>
             </svg>
@@ -141,12 +136,7 @@
         </div>
         <!-- Kharkhovia Section -->
         <div class="hex-container">
-            <!-- Damage Display -->
-            <div class="damage-display">
-                <span>Kharkhovia</span>
-                <span>Damage Dealt: <span id="kharkhovia-damage-dealt">0</span></span>
-                <span>Damage Received: <span id="kharkhovia-damage-received">0</span></span>
-            </div>
+            <!-- Removed Damage Display -->
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="kharkhovia"></polygon>
             </svg>
@@ -211,11 +201,11 @@
             });
         }
 
-        // Initialize damage stats
-        const damageStats = {
-            cascadea: { dealt: 0, received: 0 },
-            kharkhovia: { dealt: 0, received: 0 }
-        };
+        // Removed damage stats initialization
+        // const damageStats = {
+        //     cascadea: { dealt: 0, received: 0 },
+        //     kharkhovia: { dealt: 0, received: 0 }
+        // };
 
         // Function to roll a die
         function rollDie(die) {
@@ -309,6 +299,8 @@
             const cascadeaDamage = Math.min(Math.max(kharkhoviaRolls.totalHits - cascadeaRolls.totalBlocks, 0), totalUnits(units.cascadea));
             const kharkhoviaDamage = Math.min(Math.max(cascadeaRolls.totalHits - kharkhoviaRolls.totalBlocks, 0), totalUnits(units.kharkhovia));
 
+            // Removed damage stats update
+            /*
             // Update damage stats
             damageStats.cascadea.dealt += kharkhoviaDamage;
             damageStats.cascadea.received += cascadeaDamage;
@@ -320,6 +312,7 @@
             document.getElementById('cascadea-damage-received').innerText = damageStats.cascadea.received;
             document.getElementById('kharkhovia-damage-dealt').innerText = damageStats.kharkhovia.dealt;
             document.getElementById('kharkhovia-damage-received').innerText = damageStats.kharkhovia.received;
+            */
 
             // Output Damage Dealt
             output += `<h3>Damage Dealt:</h3>`;
