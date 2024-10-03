@@ -74,13 +74,17 @@
             word-wrap: break-word;
             line-height: 1.2;
         }
-        /* Damage display styles */
-        .damage-display {
+        /* Damage arrow display styles */
+        .damage-arrow {
             text-align: center;
-            margin-bottom: 10px;
+            margin-top: 10px;
+            font-size: 30px; /* Adjust as needed */
         }
-        .damage-display span {
-            display: block;
+        /* Unit losses display styles */
+        .unit-losses {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 24px; /* Adjust as needed */
         }
     </style>
 </head>
@@ -103,6 +107,12 @@
                 <span id="cascadea-cavalry">0</span>
                 <button onclick="changeUnits('cascadea', 'cavalry', -1)">-1 🏇</button>
             </div>
+            <div class="unit-group">
+                <span>Armored Car:</span>
+                <button onclick="changeUnits('cascadea', 'armoredCar', 1)">+1 🚙</button>
+                <span id="cascadea-armoredCar">0</span>
+                <button onclick="changeUnits('cascadea', 'armoredCar', -1)">-1 🚙</button>
+            </div>
         </div>
         <div class="unit-controls">
             <h2>Kharkhovia's Units:</h2>
@@ -118,6 +128,12 @@
                 <span id="kharkhovia-cavalry">0</span>
                 <button onclick="changeUnits('kharkhovia', 'cavalry', -1)">-1 🏇</button>
             </div>
+            <div class="unit-group">
+                <span>Armored Car:</span>
+                <button onclick="changeUnits('kharkhovia', 'armoredCar', 1)">+1 🚙</button>
+                <span id="kharkhovia-armoredCar">0</span>
+                <button onclick="changeUnits('kharkhovia', 'armoredCar', -1)">-1 🚙</button>
+            </div>
         </div>
 
         <button id="simulateButton" onclick="simulateCombat()">Simulate Combat</button>
@@ -128,19 +144,25 @@
     <div id="board">
         <!-- Cascadea Section -->
         <div class="hex-container">
-            <!-- Removed Damage Display -->
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="cascadea"></polygon>
             </svg>
             <div class="hex-units" id="cascadea-hex-units"></div>
+            <!-- Damage Arrow Display -->
+            <div class="damage-arrow" id="cascadea-damage-arrow"></div>
+            <!-- Unit Losses Display -->
+            <div class="unit-losses" id="cascadea-unit-losses"></div>
         </div>
         <!-- Kharkhovia Section -->
         <div class="hex-container">
-            <!-- Removed Damage Display -->
             <svg class="hex-svg" viewBox="0 0 100 100">
                 <polygon points="50,0 100,25 100,75 50,100 0,75 0,25" class="kharkhovia"></polygon>
             </svg>
             <div class="hex-units" id="kharkhovia-hex-units"></div>
+            <!-- Damage Arrow Display -->
+            <div class="damage-arrow" id="kharkhovia-damage-arrow"></div>
+            <!-- Unit Losses Display -->
+            <div class="unit-losses" id="kharkhovia-unit-losses"></div>
         </div>
     </div>
 
@@ -152,6 +174,26 @@
         const MISS_EMOJI = '⚪';
         const infantryEmoji = '💂‍♂️';
         const cavalryEmoji = '🏇';
+        const armoredCarEmoji = '🚙';
+
+        // Number Emojis
+        const numberEmojis = {
+            '0': '0️⃣',
+            '1': '1️⃣',
+            '2': '2️⃣',
+            '3': '3️⃣',
+            '4': '4️⃣',
+            '5': '5️⃣',
+            '6': '6️⃣',
+            '7': '7️⃣',
+            '8': '8️⃣',
+            '9': '9️⃣'
+        };
+
+        // Function to convert number to emojis
+        function numberToEmojis(number) {
+            return String(number).split('').map(digit => numberEmojis[digit]).join('');
+        }
 
         // Dice values with emojis and counts
         const lightAttackDie = [
@@ -159,6 +201,15 @@
             { hits: 1, morales: 0, emoji: HIT_EMOJI },
             { hits: 2, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI },
             { hits: 0, morales: 1, emoji: MORALE_EMOJI },
+            { hits: 0, morales: 1, emoji: MORALE_EMOJI },
+            { hits: 0, morales: 0, emoji: MISS_EMOJI }
+        ];
+
+        const heavyAttackDie = [
+            { hits: 1, morales: 0, emoji: HIT_EMOJI },
+            { hits: 2, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI },
+            { hits: 2, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI },
+            { hits: 3, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI + HIT_EMOJI },
             { hits: 0, morales: 1, emoji: MORALE_EMOJI },
             { hits: 0, morales: 0, emoji: MISS_EMOJI }
         ];
@@ -176,11 +227,13 @@
         const units = {
             cascadea: {
                 infantry: 1,
-                cavalry: 0
+                cavalry: 0,
+                armoredCar: 0
             },
             kharkhovia: {
                 infantry: 1,
-                cavalry: 0
+                cavalry: 0,
+                armoredCar: 0
             }
         };
 
@@ -197,15 +250,10 @@
                 let unitIcons = '';
                 unitIcons += infantryEmoji.repeat(units[faction].infantry);
                 unitIcons += cavalryEmoji.repeat(units[faction].cavalry);
+                unitIcons += armoredCarEmoji.repeat(units[faction].armoredCar);
                 document.getElementById(`${faction}-hex-units`).textContent = unitIcons;
             });
         }
-
-        // Removed damage stats initialization
-        // const damageStats = {
-        //     cascadea: { dealt: 0, received: 0 },
-        //     kharkhovia: { dealt: 0, received: 0 }
-        // };
 
         // Function to roll a die
         function rollDie(die) {
@@ -222,30 +270,42 @@
 
             // Infantry rolls
             for (let i = 0; i < unitCounts.infantry; i++) {
-                // Infantry rolls 1 attack die
+                // Infantry rolls 1 Light Attack Die
                 const attackRoll = rollDie(lightAttackDie);
                 attackRolls.push(attackRoll);
                 totalHits += attackRoll.hits;
                 totalMorales += attackRoll.morales;
 
-                // Infantry rolls 1 defence die
-                const defenceRoll = rollDie(defenceDie);
-                defenceRolls.push(defenceRoll);
-                totalBlocks += defenceRoll.blocks || 0;
-                totalMorales += defenceRoll.morales || 0;
+                // Infantry rolls 0 Defence Dice
             }
 
             // Cavalry rolls
             for (let i = 0; i < unitCounts.cavalry; i++) {
-                // Cavalry rolls 2 attack dice
+                // Cavalry rolls 2 Light Attack Dice
                 for (let j = 0; j < 2; j++) {
                     const attackRoll = rollDie(lightAttackDie);
                     attackRolls.push(attackRoll);
                     totalHits += attackRoll.hits;
                     totalMorales += attackRoll.morales;
                 }
+                // Cavalry rolls 0 Defence Dice
+            }
 
-                // Cavalry rolls 1 defence die
+            // Armored Car rolls
+            for (let i = 0; i < unitCounts.armoredCar; i++) {
+                // Armored Car rolls 1 Light Attack Die
+                let attackRoll = rollDie(lightAttackDie);
+                attackRolls.push(attackRoll);
+                totalHits += attackRoll.hits;
+                totalMorales += attackRoll.morales;
+
+                // Armored Car rolls 1 Heavy Attack Die
+                attackRoll = rollDie(heavyAttackDie);
+                attackRolls.push(attackRoll);
+                totalHits += attackRoll.hits;
+                totalMorales += attackRoll.morales;
+
+                // Armored Car rolls 1 Defence Die
                 const defenceRoll = rollDie(defenceDie);
                 defenceRolls.push(defenceRoll);
                 totalBlocks += defenceRoll.blocks || 0;
@@ -269,11 +329,11 @@
             output += `<h2><span class="cascadea">Cascadea (Attacker)</span> vs <span class="kharkhovia">Kharkhovia (Defender)</span></h2>`;
 
             // Display units
-            const cascadeaUnitsDisplay = infantryEmoji.repeat(units.cascadea.infantry) + cavalryEmoji.repeat(units.cascadea.cavalry);
-            const kharkhoviaUnitsDisplay = infantryEmoji.repeat(units.kharkhovia.infantry) + cavalryEmoji.repeat(units.kharkhovia.cavalry);
+            const cascadeaUnitsDisplay = infantryEmoji.repeat(units.cascadea.infantry) + cavalryEmoji.repeat(units.cascadea.cavalry) + armoredCarEmoji.repeat(units.cascadea.armoredCar);
+            const kharkhoviaUnitsDisplay = infantryEmoji.repeat(units.kharkhovia.infantry) + cavalryEmoji.repeat(units.kharkhovia.cavalry) + armoredCarEmoji.repeat(units.kharkhovia.armoredCar);
 
-            output += `<p>Cascadea: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry)</p>`;
-            output += `<p>Kharkhovia: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry)</p>`;
+            output += `<p>Cascadea: ${cascadeaUnitsDisplay} (${units.cascadea.infantry} Infantry, ${units.cascadea.cavalry} Cavalry, ${units.cascadea.armoredCar} Armored Car)</p>`;
+            output += `<p>Kharkhovia: ${kharkhoviaUnitsDisplay} (${units.kharkhovia.infantry} Infantry, ${units.kharkhovia.cavalry} Cavalry, ${units.kharkhovia.armoredCar} Armored Car)</p>`;
 
             // Roll for both factions
             const cascadeaRolls = rollForFaction('cascadea', units.cascadea);
@@ -299,30 +359,24 @@
             const cascadeaDamage = Math.min(Math.max(kharkhoviaRolls.totalHits - cascadeaRolls.totalBlocks, 0), totalUnits(units.cascadea));
             const kharkhoviaDamage = Math.min(Math.max(cascadeaRolls.totalHits - kharkhoviaRolls.totalBlocks, 0), totalUnits(units.kharkhovia));
 
-            // Removed damage stats update
-            /*
-            // Update damage stats
-            damageStats.cascadea.dealt += kharkhoviaDamage;
-            damageStats.cascadea.received += cascadeaDamage;
-            damageStats.kharkhovia.dealt += cascadeaDamage;
-            damageStats.kharkhovia.received += kharkhoviaDamage;
-
-            // Update damage displays
-            document.getElementById('cascadea-damage-dealt').innerText = damageStats.cascadea.dealt;
-            document.getElementById('cascadea-damage-received').innerText = damageStats.cascadea.received;
-            document.getElementById('kharkhovia-damage-dealt').innerText = damageStats.kharkhovia.dealt;
-            document.getElementById('kharkhovia-damage-received').innerText = damageStats.kharkhovia.received;
-            */
-
             // Output Damage Dealt
             output += `<h3>Damage Dealt:</h3>`;
             output += `Cascadea deals ${kharkhoviaDamage} damage to Kharkhovia.<br>`;
             output += `Kharkhovia deals ${cascadeaDamage} damage to Cascadea.<br>`;
 
+            // Update damage arrows
+            updateDamageArrows(cascadeaDamage, kharkhoviaDamage);
+
             // Combat Resolution
             output += `<h3>Combat Resolution:</h3>`;
-            output += resolveDamage('cascadea', cascadeaDamage);
-            output += resolveDamage('kharkhovia', kharkhoviaDamage);
+            const cascadeaResolution = resolveDamage('cascadea', cascadeaDamage);
+            const kharkhoviaResolution = resolveDamage('kharkhovia', kharkhoviaDamage);
+            output += cascadeaResolution.output;
+            output += kharkhoviaResolution.output;
+
+            // Update unit losses display
+            updateUnitLosses('cascadea', cascadeaResolution.unitsLost);
+            updateUnitLosses('kharkhovia', kharkhoviaResolution.unitsLost);
 
             // Determine Winner
             const cascadeaTotalUnits = totalUnits(units.cascadea);
@@ -346,34 +400,82 @@
             document.getElementById('output').innerHTML = output;
         }
 
+        // Function to update damage arrows
+        function updateDamageArrows(cascadeaDamage, kharkhoviaDamage) {
+            // Cascadea deals damage to Kharkhovia
+            const cascadeaDamageEmojis = numberToEmojis(kharkhoviaDamage) + '➡️';
+            document.getElementById('cascadea-damage-arrow').textContent = cascadeaDamageEmojis;
+
+            // Kharkhovia deals damage to Cascadea
+            const kharkhoviaDamageEmojis = '⬅️' + numberToEmojis(cascadeaDamage);
+            document.getElementById('kharkhovia-damage-arrow').textContent = kharkhoviaDamageEmojis;
+        }
+
+        // Function to update unit losses display
+        function updateUnitLosses(faction, unitsLost) {
+            let lossesDisplay = '';
+            const minusEmoji = '➖';
+
+            if (unitsLost.infantry > 0) {
+                lossesDisplay += minusEmoji + infantryEmoji.repeat(unitsLost.infantry) + '<br>';
+            }
+            if (unitsLost.cavalry > 0) {
+                lossesDisplay += minusEmoji + cavalryEmoji.repeat(unitsLost.cavalry) + '<br>';
+            }
+            if (unitsLost.armoredCar > 0) {
+                lossesDisplay += minusEmoji + armoredCarEmoji.repeat(unitsLost.armoredCar);
+            }
+
+            document.getElementById(`${faction}-unit-losses`).innerHTML = lossesDisplay;
+        }
+
         // Function to resolve damage for a faction
         function resolveDamage(faction, damage) {
             let output = '';
-            let unitTypes = ['infantry', 'cavalry'];
+            let unitsLost = { infantry: 0, cavalry: 0, armoredCar: 0 };
+            let unitTypes = ['infantry', 'cavalry', 'armoredCar'];
             for (let unitType of unitTypes) {
                 let unitCount = units[faction][unitType];
                 if (damage >= unitCount) {
                     damage -= unitCount;
+                    unitsLost[unitType] += unitCount;
                     units[faction][unitType] = 0;
                 } else {
                     units[faction][unitType] -= damage;
+                    unitsLost[unitType] += damage;
                     damage = 0;
                 }
                 if (damage === 0) break;
             }
 
             // Output damage resolution
-            if (totalUnits(units[faction]) === 0) {
-                output += `<p class="${faction}">${capitalizeFirstLetter(faction)}'s units are eliminated!</p>`;
+            if (unitsLost.infantry > 0 || unitsLost.cavalry > 0 || unitsLost.armoredCar > 0) {
+                if (totalUnits(units[faction]) === 0) {
+                    output += `<p class="${faction}">${capitalizeFirstLetter(faction)}'s units are eliminated!</p>`;
+                } else {
+                    // Build a string that lists units lost
+                    let losses = [];
+                    if (unitsLost.infantry > 0) {
+                        losses.push(`${unitsLost.infantry} infantry`);
+                    }
+                    if (unitsLost.cavalry > 0) {
+                        losses.push(`${unitsLost.cavalry} cavalry`);
+                    }
+                    if (unitsLost.armoredCar > 0) {
+                        losses.push(`${unitsLost.armoredCar} armored car`);
+                    }
+                    output += `<p>${capitalizeFirstLetter(faction)} loses ${losses.join(', ')}.</p>`;
+                }
             } else {
-                output += `<p>${capitalizeFirstLetter(faction)} loses units.</p>`;
+                output += `<p>${capitalizeFirstLetter(faction)} did not lose any units.</p>`;
             }
-            return output;
+
+            return { output: output, unitsLost: unitsLost };
         }
 
         // Function to calculate total units
         function totalUnits(factionUnits) {
-            return factionUnits.infantry + factionUnits.cavalry;
+            return factionUnits.infantry + factionUnits.cavalry + factionUnits.armoredCar;
         }
 
         // Function to update unit displays
@@ -381,6 +483,7 @@
             ['cascadea', 'kharkhovia'].forEach(faction => {
                 document.getElementById(`${faction}-infantry`).innerText = units[faction].infantry;
                 document.getElementById(`${faction}-cavalry`).innerText = units[faction].cavalry;
+                document.getElementById(`${faction}-armoredCar`).innerText = units[faction].armoredCar;
             });
         }
 
