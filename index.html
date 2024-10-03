@@ -61,8 +61,20 @@
         button:hover { background-color: #555; }
 
         .unit-controls { margin-bottom: 10px; }
-        .unit-group { display: flex; align-items: center; margin-bottom: 5px; }
-        .unit-group span { margin: 0 10px; }
+        .unit-group { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 5px; 
+        }
+        .unit-group span { 
+            margin: 0 10px; 
+        }
+
+        /* New Class for Unit Labels */
+        .unit-label {
+            width: 120px; /* Fixed width to ensure alignment */
+            flex: 0 0 120px; /* Prevent stretching */
+        }
 
         /* Faction colors */
         .cascadea { color: rgb(53, 106, 29); } /* Green for Cascadea */
@@ -142,19 +154,19 @@
             <div class="unit-controls">
                 <h2><span class="cascadea">Cascadea's Units:</span></h2>
                 <div class="unit-group">
-                    <span>Infantry:</span>
+                    <span class="unit-label">Infantry:</span>
                     <button onclick="changeUnits('cascadea', 'infantry', 1)">+1 💂‍♂️</button>
                     <span id="cascadea-infantry">1</span>
                     <button onclick="changeUnits('cascadea', 'infantry', -1)">-1 💂‍♂️</button>
                 </div>
                 <div class="unit-group">
-                    <span>Cavalry:</span>
+                    <span class="unit-label">Cavalry:</span>
                     <button onclick="changeUnits('cascadea', 'cavalry', 1)">+1 🏇</button>
                     <span id="cascadea-cavalry">0</span>
                     <button onclick="changeUnits('cascadea', 'cavalry', -1)">-1 🏇</button>
                 </div>
                 <div class="unit-group">
-                    <span>Armored Car:</span>
+                    <span class="unit-label">Armored Car:</span>
                     <button onclick="changeUnits('cascadea', 'armoredCar', 1)">+1 🚙</button>
                     <span id="cascadea-armoredCar">0</span>
                     <button onclick="changeUnits('cascadea', 'armoredCar', -1)">-1 🚙</button>
@@ -163,19 +175,19 @@
             <div class="unit-controls">
                 <h2><span class="kharkhovia">Kharkhovia's Units:</span></h2>
                 <div class="unit-group">
-                    <span>Infantry:</span>
+                    <span class="unit-label">Infantry:</span>
                     <button onclick="changeUnits('kharkhovia', 'infantry', 1)">+1 💂‍♂️</button>
                     <span id="kharkhovia-infantry">1</span>
                     <button onclick="changeUnits('kharkhovia', 'infantry', -1)">-1 💂‍♂️</button>
                 </div>
                 <div class="unit-group">
-                    <span>Cavalry:</span>
+                    <span class="unit-label">Cavalry:</span>
                     <button onclick="changeUnits('kharkhovia', 'cavalry', 1)">+1 🏇</button>
                     <span id="kharkhovia-cavalry">0</span>
                     <button onclick="changeUnits('kharkhovia', 'cavalry', -1)">-1 🏇</button>
                 </div>
                 <div class="unit-group">
-                    <span>Armored Car:</span>
+                    <span class="unit-label">Armored Car:</span>
                     <button onclick="changeUnits('kharkhovia', 'armoredCar', 1)">+1 🚙</button>
                     <span id="kharkhovia-armoredCar">0</span>
                     <button onclick="changeUnits('kharkhovia', 'armoredCar', -1)">-1 🚙</button>
@@ -221,7 +233,7 @@
         // Emojis
         const HIT_EMOJI = '💥';
         const BLOCK_EMOJI = '🛡️';
-        const MORALE_EMOJI = '🥁';
+        const MORALE_EMOJI = '🚩'; // Updated Morale Emoji
         const MISS_EMOJI = '⚪';
         const infantryEmoji = '💂‍♂️';
         const cavalryEmoji = '🏇';
@@ -251,6 +263,7 @@
         }
 
         // Dice values with emojis and counts
+        // Reverted Light Attack Dice: {Hit, Hit, Double Hit, Morale, Morale, Miss}
         const lightAttackDie = [
             { hits: 1, morales: 0, emoji: HIT_EMOJI },
             { hits: 1, morales: 0, emoji: HIT_EMOJI },
@@ -260,6 +273,17 @@
             { hits: 0, morales: 0, emoji: MISS_EMOJI }
         ];
 
+        // Updated Defence Dice: {Block, Block, Block, Double Block, Double Morale, Miss}
+        const defenceDie = [
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
+            { blocks: 2, morales: 0, emoji: BLOCK_EMOJI + BLOCK_EMOJI },
+            { blocks: 0, morales: 2, emoji: MORALE_EMOJI + MORALE_EMOJI },
+            { blocks: 0, morales: 0, emoji: MISS_EMOJI }
+        ];
+
+        // Reintroduced Heavy Attack Dice: {Hit, Hit, Double Hit, Triple Hit, Morale, Miss}
         const heavyAttackDie = [
             { hits: 1, morales: 0, emoji: HIT_EMOJI },
             { hits: 2, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI },
@@ -267,15 +291,6 @@
             { hits: 3, morales: 0, emoji: HIT_EMOJI + HIT_EMOJI + HIT_EMOJI },
             { hits: 0, morales: 1, emoji: MORALE_EMOJI },
             { hits: 0, morales: 0, emoji: MISS_EMOJI }
-        ];
-
-        const defenceDie = [
-            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
-            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
-            { blocks: 1, morales: 0, emoji: BLOCK_EMOJI },
-            { blocks: 2, morales: 0, emoji: BLOCK_EMOJI + BLOCK_EMOJI },
-            { blocks: 0, morales: 1, emoji: MORALE_EMOJI },
-            { blocks: 0, morales: 0, emoji: MISS_EMOJI }
         ];
 
         // Unit Strengths
