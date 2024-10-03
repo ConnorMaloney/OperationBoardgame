@@ -1,0 +1,140 @@
+/* Simplified and organized CSS */
+body { 
+    font-family: Arial, sans-serif; 
+    margin: 20px; 
+    background-color: #1e1e1e; 
+    color: #f0f0f0; 
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#main-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+#combat-section, #output-section, #board {
+    width: 32%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Adjusted styles for combat section */
+#combat-section {
+    background-color: #2e2e2e;
+    border-radius: 5px;
+}
+
+/* Adjusted styles for output section */
+#output-section {
+    background-color: #2e2e2e;
+    border-radius: 5px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Adjusted styles for board section */
+#board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+button { 
+    padding: 10px 20px; 
+    font-size: 16px; 
+    margin-bottom: 10px; 
+    background-color: #333; 
+    color: #f0f0f0; 
+    border: none; 
+    cursor: pointer;
+}
+
+button:hover { background-color: #555; }
+
+.unit-controls { margin-bottom: 10px; }
+.unit-group { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 5px; 
+}
+.unit-group span { 
+    margin: 0 10px; 
+}
+
+/* New Class for Unit Labels */
+.unit-label {
+    width: 120px; /* Fixed width to ensure alignment */
+    flex: 0 0 120px; /* Prevent stretching */
+}
+
+/* Faction colors */
+.cascadea { color: rgb(53, 106, 29); } /* Green for Cascadea */
+.kharkhovia { color: rgb(241, 194, 50); } /* Yellow for Kharkhovia */
+
+/* Hexagon container */
+.hex-container {
+    position: relative;
+    width: 315px; /* Increased size by 50% */
+    height: 365px; /* Increased size by 50% */
+    margin: 20px 0;
+}
+
+/* SVG hexagon styles */
+.hex-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.hex-svg polygon {
+    fill: transparent;
+    stroke: #fff;
+    stroke-width: 4;
+}
+
+.hex-svg .cascadea {
+    stroke: rgb(53, 106, 29);
+}
+
+.hex-svg .kharkhovia {
+    stroke: rgb(241, 194, 50);
+}
+
+/* Units displayed over the hexagon */
+.hex-units {
+    position: absolute;
+    top: 50%;
+    left: 50%; /* Centered */
+    transform: translate(-50%, -50%);
+    color: #f0f0f0;
+    font-size: 30px; /* Adjusted font size */
+    text-align: center;
+    width: 80%; /* Adjust as needed */
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.2;
+    /* Removed unit summary display */
+}
+
+/* Damage arrow display styles */
+.damage-arrow {
+    position: absolute;
+    top: 45%; /* Adjust as needed */
+    right: -175px; /* Maintained from previous adjustment */
+    transform: translateY(-50%);
+    font-size: 30px; /* Adjust as needed */
+    text-align: center;
+}
+
+/* Unit losses display styles */
+.unit-losses {
+    position: absolute;
+    top: 65%; /* Increased from 55% to 65% to widen the gap */
+    right: -175px; /* Maintained from previous adjustment */
+    transform: translateY(-50%);
+    font-size: 24px; /* Adjust as needed */
+    text-align: center;
+}
