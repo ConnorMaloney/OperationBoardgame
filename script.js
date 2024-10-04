@@ -89,6 +89,12 @@ let selectedTactics = {
     kharkhovia: null
 };
 
+// Rolled Dice
+let rolledDice = {
+    cascadea: null,
+    kharkhovia: null
+};
+
 // Function to create unit controls dynamically
 function createUnitControls() {
     ['cascadea', 'kharkhovia'].forEach(faction => {
@@ -201,46 +207,54 @@ function rollForFaction(faction, unitCounts) {
     };
 }
 
-// Function to simulate combat
+// Function to simulate Dice Roll
+function rollDice() {
+    rolledDice = {
+        cascadea: rollForFaction('cascadea', units.cascadea),
+        kharkhovia: rollForFaction('kharkhovia', units.kharkhovia)
+    };
+
+    let output = '';
+
+    // Display rolled dice for Cascadea
+    output += `<h2>Rolled Dice Results</h2>`;
+    output += `<h3><span class="cascadea">Cascadea's Rolls:</span></h3>`;
+    output += `Attack Rolls: ${rolledDice.cascadea.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
+    output += `Defence Rolls: ${rolledDice.cascadea.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
+    output += `Total Hits: ${rolledDice.cascadea.totalHits} ${HIT_EMOJI}<br>`;
+    output += `Total Blocks: ${rolledDice.cascadea.totalBlocks} ${BLOCK_EMOJI}<br>`;
+    output += `Total Morales: ${rolledDice.cascadea.totalMorales} ${MORALE_EMOJI}<br><br>`;
+
+    // Display rolled dice for Kharkhovia
+    output += `<h3><span class="kharkhovia">Kharkhovia's Rolls:</span></h3>`;
+    output += `Attack Rolls: ${rolledDice.kharkhovia.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
+    output += `Defence Rolls: ${rolledDice.kharkhovia.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
+    output += `Total Hits: ${rolledDice.kharkhovia.totalHits} ${HIT_EMOJI}<br>`;
+    output += `Total Blocks: ${rolledDice.kharkhovia.totalBlocks} ${BLOCK_EMOJI}<br>`;
+    output += `Total Morales: ${rolledDice.kharkhovia.totalMorales} ${MORALE_EMOJI}<br>`;
+
+    // Update Output Section
+    document.getElementById('output').innerHTML = output;
+}
+
+// Function to simulate combat without tactics
 function simulateCombat() {
+    // Automatically roll dice
+    rollDice();
+
+    if (!rolledDice.cascadea || !rolledDice.kharkhovia) {
+        alert("Failed to roll dice.");
+        return;
+    }
+
     let output = '';
 
     // Header
-    output += `<h2><span class="cascadea">Cascadea (Attacker)</span> vs <span class="kharkhovia">Kharkhovia (Defender)</span></h2>`;
-
-    // Display units with Total Strength
-    const cascadeaTotalStrength = calculateTotalStrength('cascadea');
-    const kharkhoviaTotalStrength = calculateTotalStrength('kharkhovia');
-
-    const cascadeaUnitsDisplay = unitsData.map(unit => unit.emoji.repeat(units.cascadea[unit.name])).join('');
-    const kharkhoviaUnitsDisplay = unitsData.map(unit => unit.emoji.repeat(units.kharkhovia[unit.name])).join('');
-
-    output += `<p><span class="cascadea">Cascadea</span>: ${cascadeaUnitsDisplay} (${cascadeaTotalStrength} Strength)</p>`;
-    output += `<p><span class="kharkhovia">Kharkhovia</span>: ${kharkhoviaUnitsDisplay} (${kharkhoviaTotalStrength} Strength)</p>`;
-
-    // Roll for both factions
-    const cascadeaRolls = rollForFaction('cascadea', units.cascadea);
-    const kharkhoviaRolls = rollForFaction('kharkhovia', units.kharkhovia);
-
-    // Output Cascadea's rolls
-    output += `<h3><span class="cascadea">Cascadea's Rolls:</span></h3>`;
-    output += `Attack Rolls: ${cascadeaRolls.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
-    output += `Defence Rolls: ${cascadeaRolls.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
-    output += `Total Hits: ${cascadeaRolls.totalHits} ${HIT_EMOJI}<br>`;
-    output += `Total Blocks: ${cascadeaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
-    output += `Total Morales: ${cascadeaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
-
-    // Output Kharkhovia's rolls
-    output += `<h3><span class="kharkhovia">Kharkhovia's Rolls:</span></h3>`;
-    output += `Attack Rolls: ${kharkhoviaRolls.attackRolls.map(roll => roll.emoji).join(', ')}<br>`;
-    output += `Defence Rolls: ${kharkhoviaRolls.defenceRolls.map(roll => roll.emoji).join(', ')}<br>`;
-    output += `Total Hits: ${kharkhoviaRolls.totalHits} ${HIT_EMOJI}<br>`;
-    output += `Total Blocks: ${kharkhoviaRolls.totalBlocks} ${BLOCK_EMOJI}<br>`;
-    output += `Total Morales: ${kharkhoviaRolls.totalMorales} ${MORALE_EMOJI}<br>`;
+    output += `<h2>Combat Simulation</h2>`;
 
     // Calculate damage
-    const cascadeaDamage = Math.max(kharkhoviaRolls.totalHits - cascadeaRolls.totalBlocks, 0);
-    const kharkhoviaDamage = Math.max(cascadeaRolls.totalHits - kharkhoviaRolls.totalBlocks, 0);
+    const cascadeaDamage = Math.max(rolledDice.kharkhovia.totalHits - rolledDice.cascadea.totalBlocks, 0);
+    const kharkhoviaDamage = Math.max(rolledDice.cascadea.totalHits - rolledDice.kharkhovia.totalBlocks, 0);
 
     // Output Damage Dealt
     output += `<h3>Damage Dealt:</h3>`;
@@ -280,60 +294,115 @@ function simulateCombat() {
     updateBoardUnits();
 
     // Update output
-    document.getElementById('output').innerHTML = output;
+    document.getElementById('output').innerHTML += output;
+
+    // Clear rolledDice after combat simulation
+    rolledDice = {
+        cascadea: null,
+        kharkhovia: null
+    };
+
+    // Clear selected tactics
+    clearSelectedTactics();
 }
 
 // Function to simulate Tactics
+// Note: Simulate Tactics should resolve combat based on rolledDice and selectedTactics
+// It should not reroll the dice
+// Assumes that rolledDice has been rolled and tactics are selected
+// Resolves combat and updates units
 function simulateTactics() {
-    let output = '';
+    if (!rolledDice.cascadea || !rolledDice.kharkhovia) {
+        alert("Please roll dice before simulating tactics.");
+        return;
+    }
 
-    // Check if both tactics are selected
     if (!selectedTactics.cascadea || !selectedTactics.kharkhovia) {
         alert("Please select one tactic for each faction before simulating tactics.");
         return;
     }
 
-    // Display selected tactics
+    let output = '';
+
+    // Header
     output += `<h2>Tactics Simulation</h2>`;
+
+    // Display selected tactics
     output += `<p><span class="cascadea">Cascadea's Tactic:</span> Tactic ${selectedTactics.cascadea}</p>`;
     output += `<p><span class="kharkhovia">Kharkhovia's Tactic:</span> Tactic ${selectedTactics.kharkhovia}</p>`;
 
-    // Placeholder for tactics effects
-    // You can implement specific effects based on selected tactics here
-    output += `<p>Tactics have been simulated. (Effects can be implemented as needed.)</p>`;
+    // Apply Tactics Effects
+    let cascadeaAttackBonus = tacticsEffects.cascadea[selectedTactics.cascadea].attackBonus || 0;
+    let cascadeaDefenceBonus = tacticsEffects.cascadea[selectedTactics.cascadea].defenceBonus || 0;
 
-    // Update Output Section
-    document.getElementById('output').innerHTML += output;
-}
+    let kharkhoviaAttackBonus = tacticsEffects.kharkhovia[selectedTactics.kharkhovia].attackBonus || 0;
+    let kharkhoviaDefenceBonus = tacticsEffects.kharkhovia[selectedTactics.kharkhovia].defenceBonus || 0;
 
-// Function to update damage arrows
-function updateDamageArrows(cascadeaDamage, kharkhoviaDamage) {
-    // Cascadea deals damage to Kharkhovia
-    const cascadeaDamageEmojis = cascadeaDamageArrowEmoji + numberToEmojis(kharkhoviaDamage);
-    document.getElementById('cascadea-damage-arrow').textContent = cascadeaDamageEmojis;
+    // Modify total hits and blocks based on Tactics
+    const modifiedCascadeaHits = rolledDice.cascadea.totalHits + cascadeaAttackBonus;
+    const modifiedKharkhoviaHits = rolledDice.kharkhovia.totalHits + kharkhoviaAttackBonus;
 
-    // Kharkhovia deals damage to Cascadea
-    const kharkhoviaDamageEmojis = kharkhoviaDamageArrowEmoji + numberToEmojis(cascadeaDamage);
-    document.getElementById('kharkhovia-damage-arrow').textContent = kharkhoviaDamageEmojis;
-}
+    const modifiedCascadeaBlocks = rolledDice.cascadea.totalBlocks + cascadeaDefenceBonus;
+    const modifiedKharkhoviaBlocks = rolledDice.kharkhovia.totalBlocks + kharkhoviaDefenceBonus;
 
-// Function to update unit losses display
-function updateUnitLosses(faction, unitsLost) {
-    let lossesDisplay = '';
-    const minusEmoji = '➖';
+    // Display modifiers
+    output += `<p><span class="cascadea">Cascadea's Attack Bonus:</span> +${cascadeaAttackBonus}</p>`;
+    output += `<p><span class="cascadea">Cascadea's Defence Bonus:</span> +${cascadeaDefenceBonus}</p>`;
+    output += `<p><span class="kharkhovia">Kharkhovia's Attack Bonus:</span> +${kharkhoviaAttackBonus}</p>`;
+    output += `<p><span class="kharkhovia">Kharkhovia's Defence Bonus:</span> +${kharkhoviaDefenceBonus}</p>`;
 
-    unitsData.forEach(unit => {
-        if (unitsLost[unit.name] > 0) {
-            lossesDisplay += `${minusEmoji}${unit.emoji.repeat(unitsLost[unit.name])}<br>`;
-        }
-    });
+    // Calculate damage with Tactics
+    const cascadeaDamage = Math.max(modifiedKharkhoviaHits - modifiedCascadeaBlocks, 0);
+    const kharkhoviaDamage = Math.max(modifiedCascadeaHits - modifiedKharkhoviaBlocks, 0);
 
-    // Remove the last <br> if exists
-    if (lossesDisplay.endsWith('<br>')) {
-        lossesDisplay = lossesDisplay.slice(0, -4);
+    // Output Damage Dealt
+    output += `<h3>Damage Dealt:</h3>`;
+    output += `<span class="cascadea">Cascadea</span> deals ${kharkhoviaDamage} damage to <span class="kharkhovia">Kharkhovia</span>.<br>`;
+    output += `<span class="kharkhovia">Kharkhovia</span> deals ${cascadeaDamage} damage to <span class="cascadea">Cascadea</span>.<br>`;
+
+    // Update damage arrows
+    updateDamageArrows(cascadeaDamage, kharkhoviaDamage);
+
+    // Combat Resolution
+    output += `<h3>Combat Resolution:</h3>`;
+    const cascadeaResolution = resolveDamage('cascadea', cascadeaDamage);
+    const kharkhoviaResolution = resolveDamage('kharkhovia', kharkhoviaDamage);
+    output += cascadeaResolution.output;
+    output += kharkhoviaResolution.output;
+
+    // Update unit losses display
+    updateUnitLosses('cascadea', cascadeaResolution.unitsLost);
+    updateUnitLosses('kharkhovia', kharkhoviaResolution.unitsLost);
+
+    // Determine Winner
+    const cascadeaTotalUnits = totalUnits(units.cascadea);
+    const kharkhoviaTotalUnits = totalUnits(units.kharkhovia);
+
+    if (cascadeaTotalUnits > 0 && kharkhoviaTotalUnits === 0) {
+        output += `<h2 class="cascadea">Cascadea Wins!</h2>`;
+    } else if (kharkhoviaTotalUnits > 0 && cascadeaTotalUnits === 0) {
+        output += `<h2 class="kharkhovia">Kharkhovia Wins!</h2>`;
+    } else if (cascadeaTotalUnits === 0 && kharkhoviaTotalUnits === 0) {
+        output += `<h2>It's a Tie!</h2>`;
+    } else {
+        output += `<p>Both armies survive the battle.</p>`;
     }
 
-    document.getElementById(`${faction}-unit-losses`).innerHTML = lossesDisplay;
+    // Update unit counts and board
+    updateUnitDisplays();
+    updateBoardUnits();
+
+    // Update output
+    document.getElementById('output').innerHTML += output;
+
+    // Clear rolledDice after tactics simulation
+    rolledDice = {
+        cascadea: null,
+        kharkhovia: null
+    };
+
+    // Clear selected tactics
+    clearSelectedTactics();
 }
 
 // Function to resolve damage for a faction
@@ -427,4 +496,43 @@ function initializeTacticsSelection() {
             selectedTactics[faction] = tactic;
         });
     });
+}
+
+// Function to clear selected tactics after simulation
+function clearSelectedTactics() {
+    ['cascadea', 'kharkhovia'].forEach(faction => {
+        selectedTactics[faction] = null;
+        const factionCards = document.querySelectorAll(`.tactic-card[data-faction="${faction}"]`);
+        factionCards.forEach(fc => fc.classList.remove('selected'));
+    });
+}
+
+// Function to update damage arrows
+function updateDamageArrows(cascadeaDamage, kharkhoviaDamage) {
+    // Cascadea deals damage to Kharkhovia
+    const cascadeaDamageEmojis = cascadeaDamageArrowEmoji + numberToEmojis(kharkhoviaDamage);
+    document.getElementById('cascadea-damage-arrow').textContent = cascadeaDamageEmojis;
+
+    // Kharkhovia deals damage to Cascadea
+    const kharkhoviaDamageEmojis = kharkhoviaDamageArrowEmoji + numberToEmojis(cascadeaDamage);
+    document.getElementById('kharkhovia-damage-arrow').textContent = kharkhoviaDamageEmojis;
+}
+
+// Function to update unit losses display
+function updateUnitLosses(faction, unitsLost) {
+    let lossesDisplay = '';
+    const minusEmoji = '➖';
+
+    unitsData.forEach(unit => {
+        if (unitsLost[unit.name] > 0) {
+            lossesDisplay += `${minusEmoji}${unit.emoji.repeat(unitsLost[unit.name])}<br>`;
+        }
+    });
+
+    // Remove the last <br> if exists
+    if (lossesDisplay.endsWith('<br>')) {
+        lossesDisplay = lossesDisplay.slice(0, -4);
+    }
+
+    document.getElementById(`${faction}-unit-losses`).innerHTML = lossesDisplay;
 }

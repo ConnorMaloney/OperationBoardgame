@@ -21,7 +21,7 @@ h1 {
 
 /* Combat Section */
 #combat-section {
-    width: 25%; /* Reduced from 32% to 25% */
+    width: 25%; /* Adjusted width */
     background-color: #2e2e2e;
     border-radius: 5px;
     padding: 10px;
@@ -31,7 +31,7 @@ h1 {
 
 /* Output Section */
 #output-section {
-    width: 25%; /* Reduced from 32% to 25% */
+    width: 25%; /* Adjusted width */
     background-color: #2e2e2e;
     border-radius: 5px;
     padding: 10px;
@@ -42,7 +42,7 @@ h1 {
 
 /* Board Section */
 #board {
-    width: 25%; /* Reduced from 32% to 25% */
+    width: 25%; /* Adjusted width */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -74,13 +74,24 @@ button {
 
 button:hover { background-color: #555; }
 
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* Unit Controls */
-.unit-controls { margin-bottom: 10px; }
+.unit-controls { 
+    margin-bottom: 20px; 
+}
+
 .unit-group { 
     display: flex; 
     align-items: center; 
     margin-bottom: 5px; 
 }
+
 .unit-group span { 
     margin: 0 10px; 
 }
@@ -98,8 +109,8 @@ button:hover { background-color: #555; }
 /* Hexagon Container */
 .hex-container {
     position: relative;
-    width: 315px; /* Increased size by 50% */
-    height: 365px; /* Increased size by 50% */
+    width: 315px; /* Increased size */
+    height: 365px; /* Increased size */
     margin: 20px 0;
 }
 
@@ -136,14 +147,13 @@ button:hover { background-color: #555; }
     white-space: normal;
     word-wrap: break-word;
     line-height: 1.2;
-    /* Removed unit summary display */
 }
 
 /* Damage Arrow Display Styles */
 .damage-arrow {
     position: absolute;
     top: 45%; /* Adjust as needed */
-    right: -175px; /* Maintained from previous adjustment */
+    right: -175px; /* Adjust based on layout */
     transform: translateY(-50%);
     font-size: 30px; /* Adjust as needed */
     text-align: center;
@@ -152,8 +162,8 @@ button:hover { background-color: #555; }
 /* Unit Losses Display Styles */
 .unit-losses {
     position: absolute;
-    top: 65%; /* Increased from 55% to 65% to widen the gap */
-    right: -175px; /* Maintained from previous adjustment */
+    top: 65%; /* Adjusted to widen the gap */
+    right: -175px; /* Adjust based on layout */
     transform: translateY(-50%);
     font-size: 24px; /* Adjust as needed */
     text-align: center;

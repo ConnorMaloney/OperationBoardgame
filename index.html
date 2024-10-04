@@ -22,7 +22,11 @@
                 <div id="kharkhovia-unit-controls"></div>
             </div>
 
-            <button id="simulateButton" onclick="simulateCombat()">Simulate Combat</button>
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="rollDiceButton" onclick="rollDice()">Roll Dice</button>
+                <button id="simulateCombatButton" onclick="simulateCombat()">Simulate Combat</button>
+            </div>
         </div>
 
         <!-- Output Section -->
@@ -97,6 +101,8 @@
 
     <!-- Units Data -->
     <script src="units.js"></script>
+    <!-- Tactics Data -->
+    <script src="tactics.js"></script>
     <!-- Main Script -->
     <script src="script.js"></script>
 </body>
