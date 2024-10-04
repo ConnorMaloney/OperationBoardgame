@@ -83,6 +83,12 @@ unitsData.forEach(unit => {
     units.kharkhovia[unit.name] = unit.name === 'infantry' ? 1 : 0;
 });
 
+// Selected Tactics
+let selectedTactics = {
+    cascadea: null,
+    kharkhovia: null
+};
+
 // Function to create unit controls dynamically
 function createUnitControls() {
     ['cascadea', 'kharkhovia'].forEach(faction => {
@@ -120,6 +126,9 @@ function createUnitControls() {
             controlsContainer.appendChild(unitGroup);
         });
     });
+
+    // Initialize Tactics Selection
+    initializeTacticsSelection();
 }
 
 // Call the function to generate unit controls on page load
@@ -274,6 +283,29 @@ function simulateCombat() {
     document.getElementById('output').innerHTML = output;
 }
 
+// Function to simulate Tactics
+function simulateTactics() {
+    let output = '';
+
+    // Check if both tactics are selected
+    if (!selectedTactics.cascadea || !selectedTactics.kharkhovia) {
+        alert("Please select one tactic for each faction before simulating tactics.");
+        return;
+    }
+
+    // Display selected tactics
+    output += `<h2>Tactics Simulation</h2>`;
+    output += `<p><span class="cascadea">Cascadea's Tactic:</span> Tactic ${selectedTactics.cascadea}</p>`;
+    output += `<p><span class="kharkhovia">Kharkhovia's Tactic:</span> Tactic ${selectedTactics.kharkhovia}</p>`;
+
+    // Placeholder for tactics effects
+    // You can implement specific effects based on selected tactics here
+    output += `<p>Tactics have been simulated. (Effects can be implemented as needed.)</p>`;
+
+    // Update Output Section
+    document.getElementById('output').innerHTML += output;
+}
+
 // Function to update damage arrows
 function updateDamageArrows(cascadeaDamage, kharkhoviaDamage) {
     // Cascadea deals damage to Kharkhovia
@@ -374,3 +406,25 @@ function capitalizeFirstLetter(string) {
 
 // Initialize board units on page load
 updateBoardUnits();
+
+// Function to initialize Tactics Selection
+function initializeTacticsSelection() {
+    // Add event listeners to all tactic cards
+    const tacticCards = document.querySelectorAll('.tactic-card');
+    tacticCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const faction = card.getAttribute('data-faction');
+            const tactic = card.getAttribute('data-tactic');
+
+            // Deselect previously selected tactic for the faction
+            const factionCards = document.querySelectorAll(`.tactic-card[data-faction="${faction}"]`);
+            factionCards.forEach(fc => fc.classList.remove('selected'));
+
+            // Select the clicked tactic
+            card.classList.add('selected');
+
+            // Store the selected tactic
+            selectedTactics[faction] = tactic;
+        });
+    });
+}

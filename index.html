@@ -8,7 +8,7 @@
 <body>
     <h1>WW1 Combat Simulator</h1>
     <div id="main-container">
-        <!-- Unit Controls and Simulate Button -->
+        <!-- Combat Section -->
         <div id="combat-section">
             <!-- Unit Controls -->
             <div class="unit-controls">
@@ -54,6 +54,44 @@
                 <!-- Unit Losses Display -->
                 <div class="unit-losses" id="kharkhovia-unit-losses"></div>
             </div>
+        </div>
+
+        <!-- Tactics Section -->
+        <div id="tactics-section">
+            <h2>Tactics</h2>
+            <!-- Cascadea Tactics -->
+            <div class="tactics-group">
+                <h3 class="cascadea">Cascadea Tactics:</h3>
+                <div class="tactics-cards" id="cascadea-tactics-cards">
+                    <div class="tactic-card" data-faction="cascadea" data-tactic="1">
+                        <p><strong>Tactic 1:</strong> This is Tactic 1</p>
+                    </div>
+                    <div class="tactic-card" data-faction="cascadea" data-tactic="2">
+                        <p><strong>Tactic 2:</strong> This is Tactic 2</p>
+                    </div>
+                    <div class="tactic-card" data-faction="cascadea" data-tactic="3">
+                        <p><strong>Tactic 3:</strong> This is Tactic 3</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kharkhovia Tactics -->
+            <div class="tactics-group">
+                <h3 class="kharkhovia">Kharkhovia Tactics:</h3>
+                <div class="tactics-cards" id="kharkhovia-tactics-cards">
+                    <div class="tactic-card" data-faction="kharkhovia" data-tactic="4">
+                        <p><strong>Tactic 4:</strong> This is Tactic 4</p>
+                    </div>
+                    <div class="tactic-card" data-faction="kharkhovia" data-tactic="5">
+                        <p><strong>Tactic 5:</strong> This is Tactic 5</p>
+                    </div>
+                    <div class="tactic-card" data-faction="kharkhovia" data-tactic="6">
+                        <p><strong>Tactic 6:</strong> This is Tactic 6</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="simulateTacticsButton" onclick="simulateTactics()">Simulate Tactics</button>
         </div>
     </div>
 
